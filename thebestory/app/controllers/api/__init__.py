@@ -1,6 +1,5 @@
 """
-The Bestory
-thebestory.controllers.api
+The Bestory Project
 """
 
 from . import (

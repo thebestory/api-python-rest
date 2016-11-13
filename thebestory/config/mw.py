@@ -1,6 +1,5 @@
 """
-The Bestory
-thebestory.config.mw
+The Bestory Project
 """
 
 MW = []

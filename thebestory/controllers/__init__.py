@@ -1,4 +1,0 @@
-"""
-The Bestory
-thebestory.controllers
-"""

@@ -1,19 +1,12 @@
 """
-The Bestory
-thebestory.db
+The Bestory Project
 """
 
-DB = {
-    "default": {
-        "dialect": "postgresql",
-        "driver": "",
-        "username": "woofilee",
-        "password": "",
-        "host": "localhost",
-        "port": "",
-        "database": "testdb"
-    },
-    "test": {
-        "dialect": "sqlite"
-    }
-}
+HOST = "localhost"
+PORT = 5432
+USER = "woofilee"
+PASSWORD = ""
+DATABASE = "thebestory"
+
+POOL_MIN_SIZE = 5
+POOL_MAX_SIZE = 10

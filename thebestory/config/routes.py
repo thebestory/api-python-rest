@@ -1,9 +1,9 @@
 """
-The Bestory
-thebestory.config.routes
+The Bestory Project
 """
 
-from thebestory.controllers import api
+from thebestory.app import controllers
+from thebestory.app.controllers import api
 
 
 ROUTES = [
