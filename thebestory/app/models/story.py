@@ -14,7 +14,8 @@ stories = sa.Table(
     db.meta.DATA,
 
     sa.Column("id", sa.Integer, primary_key=True),
-    # sa.Column("author_id", sa.Integer, sa.ForeignKey("users.id"), index=True),
+    sa.Column("author_id", sa.Integer, sa.ForeignKey("users.id"), index=True,
+              nullable=False),
     sa.Column("topic_id", sa.Integer, sa.ForeignKey("topics.id"), index=True,
               nullable=False),
 

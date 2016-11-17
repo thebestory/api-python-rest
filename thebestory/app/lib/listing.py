@@ -3,7 +3,7 @@ The Bestory Project
 """
 
 from enum import IntEnum
-from typing import Union, Tuple
+from typing import Optional, Union, Tuple
 from thebestory.app.lib import identifier
 
 
@@ -30,14 +30,20 @@ class Listing:
         if self.validate_limit(default_limit) != default_limit:
             raise ValueError("Your default limit value does not comply with "
                              "the min and max value requirements.")
-        else:
-            self._default_limit = default_limit
 
-    def validate_limit(self, limit: int) -> int:
+        self._default_limit = default_limit
+
+    def validate_limit(self, limit: Optional[int] = None) -> int:
         """
         Returns limit value, which comply with the min and max value
         requirements.
         """
+        if limit is None:
+            return self._default_limit
+
+        if isinstance(limit, str):
+            limit = int(limit)
+
         return max(self._min_limit, min(self._max_limit, limit))
 
     @staticmethod
@@ -51,15 +57,16 @@ class Listing:
         return id
 
     def validate(self,
-                 limit: int,
                  before: Union[int, str, None] = None,
                  around: Union[int, str, None] = None,
-                 after: Union[int, str, None] = None
+                 after: Union[int, str, None] = None,
+                 limit: Union[int, str, None] = None
                  ) -> Tuple[int, int, Direction]:
         """
         Returns a ID of thing, from  which to search, and the correct
-        value of limit. At least one of before, around or after must
-        be specified.
+        value of limit. If neither of `before`, `around` or `after` is
+        specified, returns None as ID of thing and `before`, that means
+        to search from start of a list of things.
         """
         limit = self.validate_limit(limit)
 
@@ -69,5 +76,5 @@ class Listing:
             return self.validate_id(before), limit, Direction.BEFORE
         elif around is not None:
             return self.validate_id(around), limit, Direction.AROUND
-        else:
-            raise ValueError("Neither of parameters are not provided")
+
+        return None, limit, Direction.AFTER

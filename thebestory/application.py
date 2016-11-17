@@ -4,8 +4,8 @@ The Bestory Project
 
 import asyncio
 import asyncpgsa
-
 from aiohttp import web
+
 from thebestory import config
 
 
@@ -32,8 +32,9 @@ class Application:
             max_size=config.db.POOL_MAX_SIZE,
         )
 
-        # from thebestory.db.seeds.alpha import seed
-        # await seed(self._db)
+        if config.db.SEED:
+            from thebestory.db.seeds.alpha import seed
+            await seed(self._db)
 
     async def _on_shutdown(self):
         pass

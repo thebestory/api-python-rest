@@ -13,6 +13,7 @@ topics = sa.Table(
     sa.Column("id", sa.Integer, primary_key=True),
 
     sa.Column("title", sa.String(64), nullable=False),
+    sa.Column("slug", sa.String(32), nullable=False),
     sa.Column("desc", sa.Text, default="", nullable=False),
     sa.Column("icon", sa.String(16), default="", nullable=False),
 

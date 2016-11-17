@@ -10,3 +10,5 @@ DATABASE = "thebestory"
 
 POOL_MIN_SIZE = 5
 POOL_MAX_SIZE = 10
+
+SEED = False
