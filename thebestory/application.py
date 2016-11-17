@@ -53,6 +53,7 @@ class Application:
             async def bind_db(request: web.Request):
                 request.db = self.db
                 return await handler(request)
+
             return bind_db
 
         self._app.middlewares.extend(config.MW)
@@ -111,4 +112,4 @@ class Application:
             self._loop.close()
 
 
-Application().run()
+app = Application()

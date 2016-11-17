@@ -1,6 +1,5 @@
 aiohttp
 asyncpg
 asyncpgsa
-ImageHash
 pytz
 sqlalchemy
