@@ -24,6 +24,8 @@ class Topic(db.model.Base):
 
     def __init__(self, title: str, slug: str, description: str = "",
                  icon: str = ""):
+        super().__init__()
+
         self._id = None
 
         self._title = title

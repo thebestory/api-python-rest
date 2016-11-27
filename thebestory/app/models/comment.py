@@ -31,7 +31,10 @@ class Comment(db.model.Base):
         EDITED_DATE = "edited_date"  # datetime, default: None, nullable
 
     def __init__(self, author: User, story: Story, content: str):
+        super().__init__()
+
         self._id = None
+
         self._author = author
         self._story = story
 

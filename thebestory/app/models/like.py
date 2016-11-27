@@ -2,6 +2,7 @@
 The Bestory Project
 """
 
+import abc
 import pytz
 from datetime import datetime
 from enum import Enum
@@ -17,7 +18,7 @@ class State(Enum):
     UNLIKE = False
 
 
-class Like(db.model.Base):
+class Like(db.model.Base, abc.ABC):
     class Schema:
         USER_ID = "user_id"  # foreign key, integer, index, not null
         STATE = "state"  # boolean, not null
@@ -25,6 +26,8 @@ class Like(db.model.Base):
         STATE_DATE = "state_date"  # datetime, default: now, not null
 
     def __init__(self, user: User, state: State):
+        super().__init__()
+
         self._user = user
         self._state = state
 
@@ -36,8 +39,8 @@ class StoryLike(Like):
         STORY_ID = "story_id"  # foreign key, integer, index, not null
 
     def __init__(self, user: User, story: Story, state: State):
-        self._story = story
         super().__init__(user, state)
+        self._story = story
 
 
 class CommentLike(Like):
@@ -45,5 +48,5 @@ class CommentLike(Like):
         COMMENT_ID = "comment_id"  # foreign key, integer, index, not null
 
     def __init__(self, user: User, comment: Comment, state: State):
-        self._comment = comment
         super().__init__(user, state)
+        self._comment = comment

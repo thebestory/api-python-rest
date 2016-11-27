@@ -16,6 +16,8 @@ class User(db.model.Base):
         USERNAME = "username"  # varchar, max len: 32, not null
 
     def __init__(self, username: str):
+        super().__init__()
+
         self._id = None
 
         self._username = username
