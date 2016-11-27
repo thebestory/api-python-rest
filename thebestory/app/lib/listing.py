@@ -41,9 +41,6 @@ class Listing:
         if limit is None:
             return self._default_limit
 
-        if isinstance(limit, str):
-            limit = int(limit)
-
         return max(self._min_limit, min(self._max_limit, limit))
 
     @staticmethod
@@ -58,23 +55,25 @@ class Listing:
 
     def validate(self,
                  before: Union[int, str, None] = None,
-                 around: Union[int, str, None] = None,
                  after: Union[int, str, None] = None,
-                 limit: Union[int, str, None] = None
-                 ) -> Tuple[int, int, Direction]:
+                 limit: Union[int, None] = None
+                 ) -> Tuple[Optional[int], int, Optional[Direction]]:
         """
         Returns a ID of thing, from  which to search, and the correct
-        value of limit. If neither of `before`, `around` or `after` is
-        specified, returns None as ID of thing and `before`, that means
-        to search from start of a list of things.
+        value of limit. If neither of `before` and `after` is
+        specified, returns None as ID of thing and `after`, that means
+        to search from start of the list of things.
         """
         limit = self.validate_limit(limit)
 
+        if before and after:
+            raise ValueError("Only one of `before` and `after` arguments must "
+                             "be specified")
+
+        if before is not None:
+            return self.validate_id(before), limit, Direction.BEFORE
+
         if after is not None:
             return self.validate_id(after), limit, Direction.AFTER
-        elif before is not None:
-            return self.validate_id(before), limit, Direction.BEFORE
-        elif around is not None:
-            return self.validate_id(around), limit, Direction.AROUND
 
         return None, limit, Direction.AFTER

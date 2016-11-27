@@ -6,7 +6,7 @@ import json
 from aiohttp import web
 
 from thebestory.app.lib import identifier, listing
-from thebestory.app.models import stories, topics
+from thebestory.app.models import table, topics
 
 
 class TopicsController:
@@ -67,8 +67,8 @@ class TopicsController:
             return web.Response(status=400, content_type='application/json')
 
         data = []
-        query = stories.select().where(stories.c.topic_id == id).order_by(
-            stories.c.publish_date.desc())
+        query = table.select().where(table.c.topic_id == id).order_by(
+            table.c.publish_date.desc())
 
         async with request.db.acquire() as conn:
             topic = await conn.fetchrow(
@@ -83,17 +83,17 @@ class TopicsController:
                 # if pivot is none, fetch first page w/o any parameters
                 if pivot is not None:
                     if direction == listing.Direction.BEFORE:
-                        query = query.where(stories.c.id < pivot)
+                        query = query.where(table.c.id < pivot)
                     elif direction == listing.Direction.AFTER:
-                        query = query.where(stories.c.id > pivot)
+                        query = query.where(table.c.id > pivot)
 
                 for row in await conn.fetch(query):
                     data.append(self._story(row, topic))
             else:
                 # TODO: check if only part data was fetched
-                query_before = query.where(stories.c.id <= pivot).limit(
+                query_before = query.where(table.c.id <= pivot).limit(
                     sum(divmod(limit, 2)))
-                query_after = query.where(stories.c.id > pivot).limit(
+                query_after = query.where(table.c.id > pivot).limit(
                     limit // 2)
 
                 query = query_before.union(query_after)

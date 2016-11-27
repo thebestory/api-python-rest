@@ -11,6 +11,7 @@ def content(filename, splitlines=False):
 
 
 long_description = content('README.md')
+
 install_requires = content('requirements.txt', splitlines=True)
 tests_requires = content('requirements-test.txt', splitlines=True)
 

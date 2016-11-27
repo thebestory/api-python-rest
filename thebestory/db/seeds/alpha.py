@@ -6,7 +6,7 @@ import datetime
 import pytz
 from asyncpgsa.pool import SAPool
 
-from thebestory.app.models import stories, topics, users
+from thebestory.app.models import table, topics, users
 
 
 async def seed(db: SAPool):
@@ -180,7 +180,7 @@ async def seed(db: SAPool):
                 print("-", author_id, ":", topic_id)
 
                 await conn.fetchval(
-                    stories.insert().values(
+                    table.insert().values(
                         author_id=author_id,
                         topic_id=topic_id,
                         content=content,
