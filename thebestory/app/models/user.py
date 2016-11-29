@@ -2,22 +2,15 @@
 The Bestory Project
 """
 
-from enum import Enum
+import sqlalchemy as sa
 
 from thebestory.app.lib import db
 
+table = sa.Table(
+    "users",
+    db.meta.DATA,
 
-class User(db.model.Base):
-    class Meta(Enum):
-        TABLE = "users"
+    sa.Column("id", sa.Integer, primary_key=True),
 
-    class Schema(Enum):
-        ID = "id"  # primary key, integer
-        USERNAME = "username"  # varchar, max len: 32, not null
-
-    def __init__(self, username: str):
-        super().__init__()
-
-        self._id = None
-
-        self._username = username
+    sa.Column("username", sa.String(32), index=True),
+)

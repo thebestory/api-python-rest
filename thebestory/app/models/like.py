@@ -2,15 +2,12 @@
 The Bestory Project
 """
 
-import abc
 import pytz
 from datetime import datetime
 from enum import Enum
+import sqlalchemy as sa
 
 from thebestory.app.lib import db
-from thebestory.app.models.comment import Comment
-from thebestory.app.models.story import Story
-from thebestory.app.models.user import User
 
 
 class State(Enum):
@@ -18,35 +15,30 @@ class State(Enum):
     UNLIKE = False
 
 
-class Like(db.model.Base, abc.ABC):
-    class Schema:
-        USER_ID = "user_id"  # foreign key, integer, index, not null
-        STATE = "state"  # boolean, not null
+story_table = sa.Table(
+    "story_likes",
+    db.meta.DATA,
 
-        STATE_DATE = "state_date"  # datetime, default: now, not null
+    sa.Column("user_id", sa.Integer, sa.ForeignKey("users.id"), index=True,
+              nullable=False),
+    sa.Column("story_id", sa.Integer, sa.ForeignKey("stories.id"), index=True,
+              nullable=False),
 
-    def __init__(self, user: User, state: State):
-        super().__init__()
+    sa.Column("timestamp", db.types.DateTime,
+              default=lambda: datetime.utcnow().replace(tzinfo=pytz.utc),
+              nullable=False)
+)
 
-        self._user = user
-        self._state = state
+comment_table = sa.Table(
+    "comment_likes",
+    db.meta.DATA,
 
-        self._state_date = datetime.utcnow().replace(tzinfo=pytz.utc)
+    sa.Column("user_id", sa.Integer, sa.ForeignKey("users.id"), index=True,
+              nullable=False),
+    sa.Column("comment_id", sa.Integer,
+              sa.ForeignKey("comments.id"), index=True, nullable=False),
 
-
-class StoryLike(Like):
-    class Schema(Like.Schema):
-        STORY_ID = "story_id"  # foreign key, integer, index, not null
-
-    def __init__(self, user: User, story: Story, state: State):
-        super().__init__(user, state)
-        self._story = story
-
-
-class CommentLike(Like):
-    class Schema(Like.Schema):
-        COMMENT_ID = "comment_id"  # foreign key, integer, index, not null
-
-    def __init__(self, user: User, comment: Comment, state: State):
-        super().__init__(user, state)
-        self._comment = comment
+    sa.Column("timestamp", db.types.DateTime,
+              default=lambda: datetime.utcnow().replace(tzinfo=pytz.utc),
+              nullable=False)
+)

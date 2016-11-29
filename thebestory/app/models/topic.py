@@ -2,36 +2,21 @@
 The Bestory Project
 """
 
-from enum import Enum
+import sqlalchemy as sa
 
 from thebestory.app.lib import db
 
+table = sa.Table(
+    "topics",
+    db.meta.DATA,
 
-class Topic(db.model.Base):
-    class Meta(Enum):
-        TABLE = "topics"
+    sa.Column("id", sa.Integer, primary_key=True),
 
-    class Schema(Enum):
-        ID = "id"  # primary key, integer
+    sa.Column("title", sa.String(64), nullable=False),
+    sa.Column("slug", sa.String(32), nullable=False),
 
-        TITLE = "title"  # varchar, max length: 64, not null
-        SLUG = "slug"  # varchar, max length: 32, index, not null
+    sa.Column("description", sa.Text, default="", nullable=False),
+    sa.Column("icon", sa.String(16), default="", nullable=False),
 
-        DESCRIPTION = "description"  # text, max len: 256, default: "", nullable
-        ICON = "icon"  # varchar, max len: 16, default: "", not null
-
-        STORIES_COUNT = "stories_count"  # foreign key, integer, index, not null
-
-    def __init__(self, title: str, slug: str, description: str = "",
-                 icon: str = ""):
-        super().__init__()
-
-        self._id = None
-
-        self._title = title
-        self._slug = slug
-
-        self._description = description
-        self._icon = icon
-
-        self._stories_count = 0
+    sa.Column("stories_count", sa.Integer, default=0, nullable=False),
+)
