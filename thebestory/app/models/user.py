@@ -12,5 +12,5 @@ table = sa.Table(
 
     sa.Column("id", sa.Integer, primary_key=True),
 
-    sa.Column("username", sa.String(32), index=True),
+    sa.Column("username", sa.String(32), unique=True),
 )
