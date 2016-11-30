@@ -26,9 +26,9 @@ table = sa.Table(
     sa.Column("is_approved", sa.Boolean, default=False, nullable=False),
     sa.Column("is_removed", sa.Boolean, default=False, nullable=False),
 
-    sa.Column("submit_date", db.types.DateTime,
+    sa.Column("submitted_date", db.types.DateTime,
               default=lambda: datetime.utcnow().replace(tzinfo=pytz.utc),
               nullable=False),
-    sa.Column("edit_date", db.types.DateTime, nullable=True),
-    sa.Column("publish_date", db.types.DateTime, nullable=True),
+    sa.Column("edited_date", db.types.DateTime, nullable=True),
+    sa.Column("published_date", db.types.DateTime, nullable=True),
 )
