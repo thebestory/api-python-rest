@@ -12,7 +12,7 @@ from sqlalchemy.sql.expression import func
 
 from thebestory.app.lib import identifier, listing
 from thebestory.app.lib.api.response import *
-from thebestory.app.models import comments, stories, topics, users
+from thebestory.app.models import comments, stories, topics, users, story_likes
 
 # User ID
 ANONYMOUS_USER_ID = 5
@@ -138,6 +138,11 @@ class StoriesController:
             await conn.execute(
                 update(topics)
                     .where(topics.c.id == topic.id)
+                    .values(stories_count=topics.c.stories_count + 1))
+
+            await conn.execute(
+                update(users)
+                    .where(users.c.id == ANONYMOUS_USER_ID)
                     .values(stories_count=topics.c.stories_count + 1))
 
         # Is story committed actually?
@@ -412,3 +417,141 @@ class StoriesController:
             status=200,
             content_type="application/json",
             text=json.dumps(data))
+
+    async def like(self, request):
+        """
+        Likes the story.
+        """
+        try:
+            id = identifier.from36(request.match_info["id"])
+        except (KeyError, ValueError):
+            return web.Response(
+                status=400,
+                content_type="application/json",
+                text=json.dumps(error(2003)))
+
+        async with request.db.acquire() as conn:
+            story = await conn.fetchrow(
+                select([stories]).where(stories.c.id == id))
+
+            if story is None or story.is_removed or not story.is_approved:
+                return web.Response(
+                    status=404,
+                    content_type="application/json",
+                    text=json.dumps(error(2003)))
+
+            like = await conn.fetchrow(
+                select([story_likes])
+                    .where(story_likes.c.user_id == ANONYMOUS_USER_ID)
+                    .where(story_likes.c.story_id == story.id))
+
+        if like is None or like is not None and not like.state:
+            async with request.db.transaction() as conn:
+                await conn.execute(insert(story_likes).values(
+                    user_id=ANONYMOUS_USER_ID,
+                    story_id=story.id,
+                    state=True,
+                    timestamp=datetime.utcnow().replace(tzinfo=pytz.utc)
+                ))
+
+                await conn.execute(
+                    update(stories)
+                        .where(stories.c.id == story.id)
+                        .values(likes_count=stories.c.likes_count + 1))
+
+                await conn.execute(
+                    update(users)
+                        .where(users.c.id == ANONYMOUS_USER_ID)
+                        .values(likes_count=users.c.likes_count + 1))
+
+            async with request.db.acquire() as conn:
+                like = await conn.fetchrow(
+                    select([story_likes])
+                        .where(story_likes.c.user_id == ANONYMOUS_USER_ID)
+                        .where(story_likes.c.story_id == story.id)
+                        .order_by(story_likes.c.timestamp.desc()))
+
+            if like is None:
+                return web.Response(
+                    status=500,
+                    content_type="application/json",
+                    text=json.dumps(error(1006)))
+
+        return web.Response(
+            status=201,
+            content_type="application/json",
+            text=json.dumps(ok({
+                "user_id": like.user_id,
+                "story_id": like.story_id,
+                "state": like.state,
+                "timestamp": like.timestamp.isoformat()
+            })))
+
+    async def unlike(self, request):
+        """
+        Unlikes the story.
+        """
+        try:
+            id = identifier.from36(request.match_info["id"])
+        except (KeyError, ValueError):
+            return web.Response(
+                status=400,
+                content_type="application/json",
+                text=json.dumps(error(2003)))
+
+        async with request.db.acquire() as conn:
+            story = await conn.fetchrow(
+                select([stories]).where(stories.c.id == id))
+
+            if story is None or story.is_removed or not story.is_approved:
+                return web.Response(
+                    status=404,
+                    content_type="application/json",
+                    text=json.dumps(error(2003)))
+
+            unlike = await conn.fetchrow(
+                select([story_likes])
+                    .where(story_likes.c.user_id == ANONYMOUS_USER_ID)
+                    .where(story_likes.c.story_id == story.id)
+                    .order_by(story_likes.c.timestamp.desc()))
+
+        if unlike is None or unlike is not None and unlike.state:
+            async with request.db.transaction() as conn:
+                await conn.execute(insert(story_likes).values(
+                    user_id=ANONYMOUS_USER_ID,
+                    story_id=story.id,
+                    state=False,
+                    timestamp=datetime.utcnow().replace(tzinfo=pytz.utc)
+                ))
+
+                await conn.execute(
+                    update(stories)
+                        .where(stories.c.id == story.id)
+                        .values(likes_count=stories.c.likes_count - 1))
+
+                await conn.execute(
+                    update(users)
+                        .where(users.c.id == ANONYMOUS_USER_ID)
+                        .values(likes_count=users.c.likes_count - 1))
+
+            async with request.db.acquire() as conn:
+                unlike = await conn.fetchrow(
+                    select([story_likes])
+                        .where(story_likes.c.user_id == ANONYMOUS_USER_ID)
+                        .where(story_likes.c.story_id == story.id))
+
+            if unlike is None:
+                return web.Response(
+                    status=500,
+                    content_type="application/json",
+                    text=json.dumps(error(1006)))
+
+        return web.Response(
+            status=201,
+            content_type="application/json",
+            text=json.dumps(ok({
+                "user_id": unlike.user_id,
+                "story_id": unlike.story_id,
+                "state": unlike.state,
+                "timestamp": unlike.timestamp.isoformat()
+            })))

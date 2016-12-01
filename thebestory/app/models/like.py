@@ -24,6 +24,8 @@ story_table = sa.Table(
     sa.Column("story_id", sa.Integer, sa.ForeignKey("stories.id"), index=True,
               nullable=False),
 
+    sa.Column("state", sa.Boolean, nullable=False),
+
     sa.Column("timestamp", db.types.DateTime,
               default=lambda: datetime.utcnow().replace(tzinfo=pytz.utc),
               nullable=False)
@@ -37,6 +39,8 @@ comment_table = sa.Table(
               nullable=False),
     sa.Column("comment_id", sa.Integer,
               sa.ForeignKey("comments.id"), index=True, nullable=False),
+
+    sa.Column("state", sa.Boolean, nullable=False),
 
     sa.Column("timestamp", db.types.DateTime,
               default=lambda: datetime.utcnow().replace(tzinfo=pytz.utc),

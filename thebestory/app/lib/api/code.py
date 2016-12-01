@@ -18,8 +18,9 @@ ERROR = {
     1001: "Endpoint not found",
     1002: "Too many requests",
     1003: "Unauthorized",
-    1004: "Story not created due to server error",
-    1005: "Comment not created due to server error",
+    1004: "Story not submitted due to server error",
+    1005: "Comment not submitted due to server error",
+    1006: "Like/Unlike not submitted due to server error",
 
     # Object of action errors
     2001: "Unknown user",

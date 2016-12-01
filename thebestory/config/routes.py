@@ -65,6 +65,18 @@ ROUTES = [
     },
     {
         "method": "POST",
+        "path": "/stories/{id:[a-z0-9]+}/like",
+        "controller": api.stories.StoriesController,
+        "action": "like"
+    },
+    {
+        "method": "POST",
+        "path": "/stories/{id:[a-z0-9]+}/unlike",
+        "controller": api.stories.StoriesController,
+        "action": "unlike"
+    },
+    {
+        "method": "POST",
         "path": "/stories",
         "controller": api.stories.StoriesController,
         "action": "submit",
