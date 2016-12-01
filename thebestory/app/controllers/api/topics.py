@@ -32,7 +32,7 @@ class TopicsController:
             topic = await conn.fetchrow(
                 select([topics]).where(topics.c.id == id))
 
-        if topic.row is None:
+        if topic is None:
             return web.Response(
                 status=404,
                 content_type="application/json",
@@ -98,7 +98,7 @@ class TopicsController:
             topic = await conn.fetchrow(
                 select([topics]).where(topics.c.id == id))
 
-            if topic.row is None:
+            if topic is None:
                 return web.Response(
                     status=404,
                     content_type="application/json",
