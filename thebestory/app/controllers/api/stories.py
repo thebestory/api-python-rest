@@ -84,6 +84,7 @@ class StoriesController:
         """
         Sumbits a new story.
         """
+        # Parses the content and ID of topic
         try:
             body = await request.json()
             topic_id = int(body["topic"])
@@ -94,12 +95,12 @@ class StoriesController:
                 content_type="application/json",
                 text=json.dumps(error(2002)))
 
+        # Content checks
         if len(content) <= 0:
             return web.Response(
                 status=400,
                 content_type="application/json",
                 text=json.dumps(error(5004)))
-
         elif len(content) > stories.c.content.type.length:
             return web.Response(
                 status=400,
@@ -108,10 +109,12 @@ class StoriesController:
 
         # TODO: Block some ascii graphics, and other unwanted symbols...
 
+        # Getting topic, where comment is submitting
         async with request.db.acquire() as conn:
             topic = await conn.fetchrow(
                 select([topics]).where(topics.c.id == topic_id))
 
+        # Checks, if topic is present for comment submitting
         if topic is None:
             return web.Response(
                 status=400,
@@ -120,6 +123,7 @@ class StoriesController:
 
         async with request.db.transaction() as conn:
             # TODO: Rewrite, when asyncpgsa replaces nulls with default values
+
             story_id = await conn.fetchval(insert(stories).values(
                 author_id=ANONYMOUS_USER_ID,
                 topic_id=topic.id,
@@ -132,8 +136,11 @@ class StoriesController:
             ))
 
             await conn.execute(
-                update(topics).values(stories_count=topics.c.stories_count + 1))
+                update(topics)
+                    .where(topics.c.id == topic.id)
+                    .values(stories_count=topics.c.stories_count + 1))
 
+        # Is story committed actually?
         if story_id is not None:
             async with request.db.acquire() as conn:
                 story = await conn.fetchrow(

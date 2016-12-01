@@ -98,7 +98,7 @@ class CommentsController:
         """
         Sumbits a new comment.
         """
-        # Parses the IDs and checks, if only one of them is present
+        # Parses the content and IDs and checks, if only one of IDs is present
         try:
             body = await request.json()
 
@@ -149,7 +149,7 @@ class CommentsController:
 
         # TODO: Block some ascii graphics, and other unwanted symbols...
 
-        # Getting story ID, where comment is submitting
+        # Getting story, where comment is submitting
         async with request.db.acquire() as conn:
             parent = None
 
@@ -169,11 +169,12 @@ class CommentsController:
             story = await conn.fetchrow(
                 select([stories]).where(stories.c.id == story_id))
 
-            if story is None or story.is_removed or not story.is_approved:
-                return web.Response(
-                    status=404,
-                    content_type="application/json",
-                    text=json.dumps(error(2003)))
+        # Checks, if story is present and valid for comment submitting
+        if story is None or story.is_removed or not story.is_approved:
+            return web.Response(
+                status=404,
+                content_type="application/json",
+                text=json.dumps(error(2003)))
 
         # Committing comment to DB, incrementing counters for story and user
         async with request.db.transaction() as conn:
@@ -210,6 +211,12 @@ class CommentsController:
 
                 topic = await conn.fetchrow(
                     select([topics]).where(topics.c.id == story.topic_id))
+
+            if comment is None:
+                return web.Response(
+                    status=500,
+                    content_type="application/json",
+                    text=json.dumps(error(1005)))
 
             # TODO: extend with parent comment
             data = {
