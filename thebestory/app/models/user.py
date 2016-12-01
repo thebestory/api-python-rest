@@ -13,4 +13,7 @@ table = sa.Table(
     sa.Column("id", sa.Integer, primary_key=True),
 
     sa.Column("username", sa.String(32), unique=True),
+
+    sa.Column("likes_count", sa.Integer, default=0, nullable=False),
+    sa.Column("comments_count", sa.Integer, default=0, nullable=False),
 )

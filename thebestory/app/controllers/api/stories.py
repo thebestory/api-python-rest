@@ -59,7 +59,7 @@ class StoriesController:
         data = {
             "id": identifier.to36(story.id),
             "content": story.content,
-            "topic": None if topic is None else {
+            "topic": {"id": story.topic_id} if topic is None else {
                 "id": topic.id,
                 "slug": topic.slug,
                 "title": topic.title,
@@ -143,7 +143,7 @@ class StoriesController:
                 return web.Response(
                     status=500,
                     content_type="application/json",
-                    text=json.dumps(error(5008)))
+                    text=json.dumps(error(1004)))
 
             data = {
                 "id": identifier.to36(story.id),
@@ -171,7 +171,7 @@ class StoriesController:
             return web.Response(
                 status=500,
                 content_type="application/json",
-                text=json.dumps(error(5008)))
+                text=json.dumps(error(1004)))
 
     async def comments(self, request):
         """

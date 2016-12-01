@@ -3,7 +3,7 @@ The Bestory Project
 """
 
 WARNING = {
-    # Object of action errors
+    # Object of action warings
     2001: "Unknown user",
     2002: "Unknown topic",
     2003: "Unknown story",
@@ -18,6 +18,8 @@ ERROR = {
     1001: "Endpoint not found",
     1002: "Too many requests",
     1003: "Unauthorized",
+    1004: "Story not created due to server error",
+    1005: "Comment not created due to server error",
 
     # Object of action errors
     2001: "Unknown user",
@@ -27,6 +29,8 @@ ERROR = {
 
     # Listing and method limits errors
     3001: "Incorrect listing request",
+    3002: "Incorrect story submit request",
+    3003: "Incorrect comment submit request",
 
     # Access errors
     4001: "Insufficient permission",
@@ -40,6 +44,4 @@ ERROR = {
     5005: "Too short comment",
     5006: "Too long story",
     5007: "Too long comment",
-    5008: "Story not created due to server error",
-    5009: "Comment not created due to server error"
 }
