@@ -17,6 +17,9 @@ from thebestory.app.models import comments, stories, topics, users
 # User ID
 ANONYMOUS_USER_ID = 5
 
+# User ID
+THEBESTORY_USER_ID = 2
+
 
 class StoriesController:
     # 25 stories per page
@@ -156,7 +159,8 @@ class StoriesController:
                 "likes_count": story.likes_count,
                 "comments_count": story.comments_count,
                 # "edited_date": story.edited_date.isoformat(),
-                "published_date": story.published_date.isoformat()
+                "submitted_date": story.submitted_date.isoformat(),
+                "published_date": None
             }
 
             return web.Response(
