@@ -109,7 +109,7 @@ class TopicsController:
                 stories.t.c.content,
                 stories.t.c.likes_count,
                 stories.t.c.comments_count,
-                stories.t.c.edited_date,
+                # stories.t.c.edited_date,
                 stories.t.c.published_date
             ]) \
                 .where(topics.c.id == topic.id) \
@@ -130,7 +130,7 @@ class TopicsController:
                     "content": story.content,
                     "likes_count": story.likes_count,
                     "comments_count": story.comments_count,
-                    "edited_date": story.edited_date,
+                    # "edited_date": story.edited_date,
                     "published_date": story.published_date
                 })
 
