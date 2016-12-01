@@ -40,4 +40,6 @@ ERROR = {
     5005: "Too short comment",
     5006: "Too long story",
     5007: "Too long comment",
+    5008: "Story not created due to server error",
+    5009: "Comment not created due to server error"
 }

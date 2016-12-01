@@ -18,7 +18,7 @@ table = sa.Table(
     sa.Column("topic_id", sa.Integer, sa.ForeignKey("topics.id"), index=True,
               nullable=False),
 
-    sa.Column("content", sa.Text, nullable=False),
+    sa.Column("content", sa.Text(8192), nullable=False),
 
     sa.Column("likes_count", sa.Integer, default=0, nullable=False),
     sa.Column("comments_count", sa.Integer, default=0, nullable=False),

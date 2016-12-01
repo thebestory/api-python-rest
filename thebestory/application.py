@@ -5,6 +5,7 @@ The Bestory Project
 import asyncio
 import asyncpgsa
 from aiohttp import web
+from asyncpg.pool import Pool
 
 from thebestory import config
 
@@ -74,7 +75,7 @@ class Application:
             )
 
     @property
-    def db(self):
+    def db(self) -> asyncpgsa.pool.SAPool:
         return self._db
 
     def run(self):

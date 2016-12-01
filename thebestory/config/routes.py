@@ -58,12 +58,17 @@ ROUTES = [
         "action": "details"
     },
     {
+        "method": "GET",
+        "path": "/stories/{id:[a-z0-9]+}/comments",
+        "controller": api.stories.StoriesController,
+        "action": "comments"
+    },
+    {
         "method": "POST",
         "path": "/stories",
         "controller": api.stories.StoriesController,
         "action": "submit",
     },
-
     {
         "method": "GET",
         "path": "/topics",

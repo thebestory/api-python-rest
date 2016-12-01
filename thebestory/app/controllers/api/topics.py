@@ -4,7 +4,6 @@ The Bestory Project
 
 import json
 
-import asyncpgsa
 from aiohttp import web
 from sqlalchemy.sql import select
 
@@ -83,7 +82,7 @@ class TopicsController:
         """
         try:
             id = int(request.match_info["id"])
-        except KeyError:
+        except (KeyError, ValueError):
             return web.Response(
                 status=400,
                 content_type="application/json",
@@ -95,7 +94,7 @@ class TopicsController:
                 request.url.query.get("after", None),
                 request.url.query.get("limit", None)
             )
-        except (KeyError, ValueError):
+        except ValueError:
             return web.Response(
                 status=400,
                 content_type="application/json",

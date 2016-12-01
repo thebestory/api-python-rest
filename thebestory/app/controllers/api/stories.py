@@ -3,13 +3,19 @@ The Bestory Project
 """
 
 import json
+from datetime import datetime
+
+import pytz
 from aiohttp import web
-from sqlalchemy.sql import insert, select
+from sqlalchemy.sql import insert, select, update
 from sqlalchemy.sql.expression import func
 
 from thebestory.app.lib import identifier, listing
 from thebestory.app.lib.api.response import *
 from thebestory.app.models import comments, stories, topics, users
+
+# User ID
+ANONYMOUS_USER_ID = 5
 
 
 class StoriesController:
@@ -60,8 +66,8 @@ class StoriesController:
             },
             "likes_count": story.likes_count,
             "comments_count": story.comments_count,
-            "edited_date": story.edited_date,
-            "published_date": story.published_date
+            # "edited_date": story.edited_date.isoformat(),
+            "published_date": story.published_date.isoformat()
         }
 
         return web.Response(
@@ -72,11 +78,96 @@ class StoriesController:
 
     # TODO: Auth required
     async def submit(self, request):
-        return web.Response(
-            status=403,
-            content_type="application/json",
-            text=json.dumps(error(4001))
-        )
+        """
+        Sumbits a new story.
+        """
+        try:
+            body = await request.json()
+            topic_id = int(body["topic"])
+            content = body["content"]
+        except (KeyError, ValueError):
+            return web.Response(
+                status=400,
+                content_type="application/json",
+                text=json.dumps(error(2002)))
+
+        if len(content) <= 0:
+            return web.Response(
+                status=400,
+                content_type="application/json",
+                text=json.dumps(error(5004)))
+
+        elif len(content) > stories.c.content.type.length:
+            return web.Response(
+                status=400,
+                content_type="application/json",
+                text=json.dumps(error(5006)))
+
+        # TODO: Block some ascii graphics, and other unwanted symbols...
+
+        async with request.db.acquire() as conn:
+            topic = await conn.fetchrow(
+                select([topics]).where(topics.c.id == topic_id))
+
+        if topic is None:
+            return web.Response(
+                status=400,
+                content_type="application/json",
+                text=json.dumps(error(2002)))
+
+        async with request.db.transaction() as conn:
+            # TODO: Rewrite, when asyncpgsa replaces nulls with default values
+            story_id = await conn.fetchval(insert(stories).values(
+                author_id=ANONYMOUS_USER_ID,
+                topic_id=topic.id,
+                content=content,
+                likes_count=0,
+                comments_count=0,
+                is_approved=False,
+                is_removed=False,
+                submitted_date=datetime.utcnow().replace(tzinfo=pytz.utc)
+            ))
+
+            await conn.execute(
+                update(topics).values(stories_count=topics.c.stories_count + 1))
+
+        if story_id is not None:
+            async with request.db.acquire() as conn:
+                story = await conn.fetchrow(
+                    select([stories]).where(stories.c.id == story_id))
+
+            if story is None:
+                return web.Response(
+                    status=500,
+                    content_type="application/json",
+                    text=json.dumps(error(5008)))
+
+            data = {
+                "id": identifier.to36(story.id),
+                "content": story.content,
+                "topic": None if topic is None else {
+                    "id": topic.id,
+                    "slug": topic.slug,
+                    "title": topic.title,
+                    "description": topic.description,
+                    "icon": topic.icon,
+                    "stories_count": topic.stories_count
+                },
+                "likes_count": story.likes_count,
+                "comments_count": story.comments_count,
+                # "edited_date": story.edited_date.isoformat(),
+                "published_date": story.published_date.isoformat()
+            }
+
+            return web.Response(
+                status=201,
+                content_type="application/json",
+                text=json.dumps(ok(data)))
+        else:
+            return web.Response(
+                status=500,
+                content_type="application/json",
+                text=json.dumps(error(5008)))
 
     async def comments(self, request):
         """
@@ -113,8 +204,8 @@ class StoriesController:
                     content_type="application/json",
                     text=json.dumps(error(4001)))
 
-            comments_ = await conn.fetchrow(
-                select([comments, users.username])
+            comments_ = await conn.fetch(
+                select([comments, users.c.username])
                     .where(users.c.id == comments.c.author_id)
                     .where(comments.c.story_id == id)
                     .order_by(comments.c.likes_count.desc()))
@@ -127,8 +218,8 @@ class StoriesController:
                     "comments": [],
                     "likes_count": comment.likes_count,
                     "comments_count": comment.comments_count,
-                    "submitted_date": comment.submitted_date,
-                    "edited_date": comment.edited_date
+                    "submitted_date": comment.submitted_date.isoformat(),
+                    "edited_date": comment.edited_date.isoformat()
                 } for comment in comments_]
 
         for comment in data:
@@ -138,7 +229,8 @@ class StoriesController:
         return web.Response(
             status=200,
             content_type="application/json",
-            text=json.dumps(ok(filter(lambda c: c["parent_id"] is None, data))))
+            text=json.dumps(
+                ok(list(filter(lambda c: c["parent_id"] is None, data)))))
 
     async def latest(self, request):
         """
@@ -149,7 +241,7 @@ class StoriesController:
             pivot, limit, direction = self.listing.validate(
                 request.url.query.get("before", None),
                 request.url.query.get("after", None),
-                int(request.url.query.get("limit", None)))
+                request.url.query.get("limit", None))
         except ValueError:
             return web.Response(
                 status=400,
@@ -166,10 +258,10 @@ class StoriesController:
             stories.c.comments_count,
             # stories.c.edited_date,
             stories.c.published_date
-        ])\
-            .where(stories.c.is_approved is True) \
-            .where(stories.c.is_removed is False) \
-            .order_by(stories.c.published_date.desc())\
+        ]) \
+            .where(stories.c.is_approved == True) \
+            .where(stories.c.is_removed == False) \
+            .order_by(stories.c.published_date.desc()) \
             .limit(limit)
 
         # if pivot is none, fetch first page w/o any parameters
@@ -189,8 +281,8 @@ class StoriesController:
                     },
                     "likes_count": story.likes_count,
                     "comments_count": story.comments_count,
-                    # "edited_date": story.edited_date,
-                    "published_date": story.published_date
+                    # "edited_date": story.edited_date.isoformat(),
+                    "published_date": story.published_date.isoformat()
                 })
 
         return web.Response(
@@ -213,7 +305,7 @@ class StoriesController:
             pivot, limit, direction = self.listing.validate(
                 request.url.query.get("before", None),
                 request.url.query.get("after", None),
-                int(request.url.query.get("limit", None)))
+                request.url.query.get("limit", None))
         except ValueError:
             return web.Response(
                 status=400,
@@ -230,10 +322,10 @@ class StoriesController:
             stories.c.comments_count,
             # stories.c.edited_date,
             stories.c.published_date
-        ])\
-            .where(stories.c.is_approved is True) \
-            .where(stories.c.is_removed is False) \
-            .order_by(stories.c.likes_count.desc())\
+        ]) \
+            .where(stories.c.is_approved == True) \
+            .where(stories.c.is_removed == False) \
+            .order_by(stories.c.likes_count.desc()) \
             .limit(limit)
 
         # if pivot is none, fetch first page w/o any parameters
@@ -253,8 +345,8 @@ class StoriesController:
                     },
                     "likes_count": story.likes_count,
                     "comments_count": story.comments_count,
-                    # "edited_date": story.edited_date,
-                    "published_date": story.published_date
+                    # "edited_date": story.edited_date.isoformat(),
+                    "published_date": story.published_date.isoformat()
                 })
 
         return web.Response(
@@ -267,7 +359,8 @@ class StoriesController:
         Returns the list of random stories.
         """
         try:
-            limit = int(request.url.query.get("limit", None))
+            limit = self.listing.validate_limit(
+                request.url.query.get("limit", None))
         except ValueError:
             return web.Response(
                 status=400,
@@ -284,10 +377,10 @@ class StoriesController:
             stories.c.comments_count,
             # stories.c.edited_date,
             stories.c.published_date
-        ])\
-            .where(stories.c.is_approved is True) \
-            .where(stories.c.is_removed is False) \
-            .order_by(func.random())\
+        ]) \
+            .where(stories.c.is_approved == True) \
+            .where(stories.c.is_removed == False) \
+            .order_by(func.random()) \
             .limit(limit)
 
         async with request.db.acquire() as conn:
@@ -300,8 +393,8 @@ class StoriesController:
                     },
                     "likes_count": story.likes_count,
                     "comments_count": story.comments_count,
-                    # "edited_date": story.edited_date,
-                    "published_date": story.published_date
+                    # "edited_date": story.edited_date.isoformat(),
+                    "published_date": story.published_date.isoformat()
                 })
 
         return web.Response(
