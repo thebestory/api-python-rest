@@ -3,6 +3,8 @@ The Bestory Project
 """
 
 import json
+
+import asyncpgsa
 from aiohttp import web
 from sqlalchemy.sql import select
 
@@ -58,7 +60,7 @@ class TopicsController:
 
         async with request.db.acquire() as conn:
             for topic in await conn.fetch(
-                    select([topics]).order_by(topics.c.slug.desc())):
+                    select([topics]).order_by(topics.c.slug.asc())):
                 data.append({
                     "id": topic.id,
                     "slug": topic.slug,
@@ -81,16 +83,23 @@ class TopicsController:
         """
         try:
             id = int(request.match_info["id"])
+        except KeyError:
+            return web.Response(
+                status=400,
+                content_type="application/json",
+                text=json.dumps(error(2002)))
+
+        try:
             pivot, limit, direction = self.listing.validate(
                 request.url.query.get("before", None),
                 request.url.query.get("after", None),
-                int(request.url.query.get("limit", None))
+                request.url.query.get("limit", None)
             )
         except (KeyError, ValueError):
             return web.Response(
                 status=400,
                 content_type="application/json",
-                text=json.dumps(error(2002)))
+                text=json.dumps(error(3001)))
 
         data = []
 
@@ -113,8 +122,8 @@ class TopicsController:
                 stories.c.published_date
             ]) \
                 .where(stories.c.topic_id == topic.id) \
-                .where(stories.c.is_approved is True) \
-                .where(stories.c.is_removed is False) \
+                .where(stories.c.is_approved == True) \
+                .where(stories.c.is_removed == False) \
                 .order_by(stories.c.published_date.desc())\
                 .limit(limit)
 
@@ -131,8 +140,8 @@ class TopicsController:
                     "content": story.content,
                     "likes_count": story.likes_count,
                     "comments_count": story.comments_count,
-                    # "edited_date": story.edited_date,
-                    "published_date": story.published_date
+                    # "edited_date": story.edited_date.isoformat(),
+                    "published_date": story.published_date.isoformat()
                 })
 
         return web.Response(

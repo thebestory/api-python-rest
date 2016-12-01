@@ -41,7 +41,7 @@ class Listing:
         if limit is None:
             return self._default_limit
 
-        return max(self._min_limit, min(self._max_limit, limit))
+        return max(self._min_limit, min(self._max_limit, int(limit)))
 
     @staticmethod
     def validate_id(id: Union[int, str]):
@@ -56,7 +56,7 @@ class Listing:
     def validate(self,
                  before: Union[int, str, None] = None,
                  after: Union[int, str, None] = None,
-                 limit: Union[int, None] = None
+                 limit: Union[int, str, None] = None
                  ) -> Tuple[Optional[int], int, Optional[Direction]]:
         """
         Returns a ID of thing, from  which to search, and the correct
