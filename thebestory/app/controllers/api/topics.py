@@ -84,7 +84,7 @@ class TopicsController:
             pivot, limit, direction = self.listing.validate(
                 request.url.query.get("before", None),
                 request.url.query.get("after", None),
-                request.url.query.get("limit", None)
+                int(request.url.query.get("limit", None))
             )
         except (KeyError, ValueError):
             return web.Response(
@@ -105,24 +105,25 @@ class TopicsController:
                     text=json.dumps(error(2002)))
 
             query = select([
-                stories.t.c.id,
-                stories.t.c.content,
-                stories.t.c.likes_count,
-                stories.t.c.comments_count,
-                # stories.t.c.edited_date,
-                stories.t.c.published_date
+                stories.c.id,
+                stories.c.content,
+                stories.c.likes_count,
+                stories.c.comments_count,
+                # stories.c.edited_date,
+                stories.c.published_date
             ]) \
-                .where(topics.c.id == topic.id) \
+                .where(stories.c.topic_id == topic.id) \
                 .where(stories.c.is_approved is True) \
                 .where(stories.c.is_removed is False) \
-                .order_by(stories.t.c.published_date.desc())
+                .order_by(stories.c.published_date.desc())\
+                .limit(limit)
 
             # if pivot is none, fetch first page w/o any parameters
             if pivot is not None:
-                if direction == listing.Direction.AFTER:
-                    query = query.where(stories.c.id < pivot)
-                elif direction == listing.Direction.BEFORE:
+                if direction == listing.Direction.BEFORE:
                     query = query.where(stories.c.id > pivot)
+                elif direction == listing.Direction.AFTER:
+                    query = query.where(stories.c.id < pivot)
 
             for story in await conn.fetch(query):
                 data.append({
