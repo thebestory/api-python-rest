@@ -53,11 +53,12 @@ CREATE TABLE topics (
 );
 
 CREATE TABLE users (
-  id             INTEGER               NOT NULL,
-  username       CHARACTER VARYING(32) NOT NULL,
-  stories_count  INTEGER DEFAULT 0     NOT NULL,
-  comments_count INTEGER DEFAULT 0     NOT NULL,
-  likes_count    INTEGER DEFAULT 0     NOT NULL
+  id                  INTEGER               NOT NULL,
+  username            CHARACTER VARYING(32) NOT NULL,
+  stories_count       INTEGER DEFAULT 0     NOT NULL,
+  comments_count      INTEGER DEFAULT 0     NOT NULL,
+  story_likes_count   INTEGER DEFAULT 0     NOT NULL,
+  comment_likes_count INTEGER DEFAULT 0     NOT NULL
 );
 
 --

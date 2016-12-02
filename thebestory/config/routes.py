@@ -7,6 +7,7 @@ from thebestory.app.controllers import api
 
 
 ROUTES = [
+    # USERS
     {
         "method": "GET",
         "path": "/users/{id:[a-zA-Z0-9]+}",
@@ -14,73 +15,89 @@ ROUTES = [
         "action": "details",
     },
 
-    {
+    # COMMENTS
+    {  # comment details
         "method": "GET",
         "path": "/comments/{id:[a-z0-9]+}",
         "controller": api.comments.CommentsController,
         "action": "details",
     },
-    {
+    {  # like comment
+        "method": "POST",
+        "path": "/comments/{id:[a-z0-9]+}/like",
+        "controller": api.comments.CommentsController,
+        "action": "like"
+    },
+    {  # unlike comment
+        "method": "POST",
+        "path": "/comments/{id:[a-z0-9]+}/unlike",
+        "controller": api.comments.CommentsController,
+        "action": "unlike"
+    },
+    {  # submit comment
         "method": "POST",
         "path": "/comments",
         "controller": api.comments.CommentsController,
         "action": "submit",
     },
 
-    {
-        "method": "GET",
-        "path": "/stories/latest",
-        "controller": api.stories.StoriesController,
-        "action": "latest",
-    },
-    {
-        "method": "GET",
-        "path": "/stories/hot",
-        "controller": api.stories.StoriesController,
-        "action": "hot",
-    },
-    {
-        "method": "GET",
-        "path": "/stories/top",
-        "controller": api.stories.StoriesController,
-        "action": "top",
-    },
-    {
-        "method": "GET",
-        "path": "/stories/random",
-        "controller": api.stories.StoriesController,
-        "action": "random",
-    },
-    {
+    # STORIES
+    {  # story details
         "method": "GET",
         "path": "/stories/{id:[a-z0-9]+}",
         "controller": api.stories.StoriesController,
         "action": "details"
     },
-    {
-        "method": "GET",
-        "path": "/stories/{id:[a-z0-9]+}/comments",
-        "controller": api.stories.StoriesController,
-        "action": "comments"
-    },
-    {
+    {  # like story
         "method": "POST",
         "path": "/stories/{id:[a-z0-9]+}/like",
         "controller": api.stories.StoriesController,
         "action": "like"
     },
-    {
+    {  # unlike story
         "method": "POST",
         "path": "/stories/{id:[a-z0-9]+}/unlike",
         "controller": api.stories.StoriesController,
         "action": "unlike"
     },
-    {
+    {  # story comments
+        "method": "GET",
+        "path": "/stories/{id:[a-z0-9]+}/comments",
+        "controller": api.stories.StoriesController,
+        "action": "comments"
+    },
+    {  # submit story
         "method": "POST",
         "path": "/stories",
         "controller": api.stories.StoriesController,
         "action": "submit",
     },
+    {  # latest stories
+        "method": "GET",
+        "path": "/stories/latest",
+        "controller": api.stories.StoriesController,
+        "action": "latest",
+    },
+    {  # hot stories
+        "method": "GET",
+        "path": "/stories/hot",
+        "controller": api.stories.StoriesController,
+        "action": "hot",
+    },
+    {  # top stories
+        "method": "GET",
+        "path": "/stories/top",
+        "controller": api.stories.StoriesController,
+        "action": "top",
+    },
+    {  # random stories
+        "method": "GET",
+        "path": "/stories/random",
+        "controller": api.stories.StoriesController,
+        "action": "random",
+    },
+
+    # TOPICS
     {
         "method": "GET",
         "path": "/topics",
