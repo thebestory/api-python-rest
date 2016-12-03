@@ -2,6 +2,8 @@
 The Bestory Project
 """
 
+from collections import OrderedDict
+
 from thebestory.app.lib.api.code import WARNING, ERROR
 
 __all__ = [
@@ -12,28 +14,28 @@ __all__ = [
 
 
 def ok(data):
-    return {
-        "status": "ok",
-        "data": data
-    }
+    return OrderedDict(
+        status="ok",
+        data=data
+    )
 
 
 def warning(code, data):
-    return {
-        "status": "warning",
-        "warning": {
-            "code": code,
-            "message": WARNING[code]
-        },
-        "data": data
-    }
+    return OrderedDict(
+        status="warning",
+        warning=OrderedDict(
+            code=code,
+            message=WARNING[code]
+        ),
+        data=data
+    )
 
 
 def error(code):
-    return {
-        "status": "error",
-        "error": {
-            "code": code,
-            "message": ERROR[code]
-        }
-    }
+    return OrderedDict(
+        status="error",
+        error=OrderedDict(
+            code=code,
+            message=ERROR[code]
+        )
+    )
