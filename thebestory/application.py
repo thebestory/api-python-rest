@@ -43,6 +43,10 @@ class Application:
         self._config_mw()
         self._config_routes()
 
+        from thebestory.app.lib import patch
+        from asyncpgsa.connection import SAConnection
+        SAConnection.fetchrow = patch.asyncpgsa.fetchrow
+
     def _config_mw(self):
         """Adds middlewares to the application instance"""
 
