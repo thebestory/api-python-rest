@@ -260,6 +260,7 @@ class StoriesController:
             .where(stories.c.is_approved == True) \
             .where(stories.c.is_removed == False) \
             .order_by(stories.c.likes_count.desc()) \
+            .order_by(stories.c.published_date.desc()) \
             .limit(limit)
 
         # if pivot is none, fetch first page w/o any parameters
@@ -334,7 +335,7 @@ class StoriesController:
         return web.Response(
             status=200,
             content_type="application/json",
-            text=json.dumps(data))
+            text=json.dumps(ok(data)))
 
     @staticmethod
     async def _like(request, state: bool):  # TODO: Auth required
@@ -381,7 +382,7 @@ class StoriesController:
                 await conn.execute(
                     update(users)
                         .where(users.c.id == ANONYMOUS_USER_ID)
-                        .values(likes_count=users.c.likes_count + diff))
+                        .values(story_likes_count=users.c.story_likes_count + diff))
 
             async with request.db.acquire() as conn:
                 like = await conn.fetchrow(

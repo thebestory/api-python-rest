@@ -164,7 +164,7 @@ class CommentsController:
                 await conn.execute(
                     update(users)
                         .where(users.c.id == ANONYMOUS_USER_ID)
-                        .values(likes_count=users.c.likes_count + diff))
+                        .values(comment_likes_count=users.c.comment_likes_count + diff))
 
             async with request.db.acquire() as conn:
                 like = await conn.fetchrow(
