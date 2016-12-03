@@ -14,28 +14,28 @@ __all__ = [
 
 
 def ok(data):
-    return OrderedDict(
-        status="ok",
-        data=data
-    )
+    return OrderedDict([
+        ("status", "ok"),
+        ("data", data)
+    ])
 
 
 def warning(code, data):
-    return OrderedDict(
-        status="warning",
-        warning=OrderedDict(
+    return OrderedDict([
+        ("status", "warning"),
+        ("warning", OrderedDict(
             code=code,
             message=WARNING[code]
-        ),
-        data=data
-    )
+        )),
+        ("data", data)
+    ])
 
 
 def error(code):
-    return OrderedDict(
-        status="error",
-        error=OrderedDict(
+    return OrderedDict([
+        ("status", "error"),
+        ("error", OrderedDict(
             code=code,
             message=ERROR[code]
-        )
-    )
+        ))
+    ])
