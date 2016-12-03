@@ -50,7 +50,7 @@ class StoriesController:
 
             if not story.is_approved:
                 return web.Response(
-                    status=403,
+                    status=200,
                     content_type="application/json",
                     text=json.dumps(error(4001)))
 
@@ -123,7 +123,7 @@ class StoriesController:
 
             if not story.is_approved:
                 return web.Response(
-                    status=403,
+                    status=200,
                     content_type="application/json",
                     text=json.dumps(error(4001)))
 
