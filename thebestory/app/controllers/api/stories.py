@@ -336,15 +336,90 @@ class StoriesController:
             content_type="application/json",
             text=json.dumps(data))
 
-    # TODO: Auth required
-    async def submit(self, request):
+    @staticmethod
+    async def _like(request, state: bool):  # TODO: Auth required
+        try:
+            id = identifier.from36(request.match_info["id"])
+        except (KeyError, ValueError):
+            return web.Response(
+                status=400,
+                content_type="application/json",
+                text=json.dumps(error(2003)))
+
+        diff = 1 if state is True else -1
+
+        async with request.db.acquire() as conn:
+            story = await conn.fetchrow(
+                select([stories]).where(stories.c.id == id))
+
+            if story is None or story.is_removed or not story.is_approved:
+                return web.Response(
+                    status=404,
+                    content_type="application/json",
+                    text=json.dumps(error(2003)))
+
+            like = await conn.fetchrow(
+                select([story_likes])
+                    .where(story_likes.c.user_id == ANONYMOUS_USER_ID)
+                    .where(story_likes.c.story_id == story.id)
+                    .order_by(story_likes.c.timestamp.desc()))
+
+        if like is None or like.state != state:
+            async with request.db.transaction() as conn:
+                await conn.execute(insert(story_likes).values(
+                    user_id=ANONYMOUS_USER_ID,
+                    story_id=story.id,
+                    state=state,
+                    timestamp=datetime.utcnow().replace(tzinfo=pytz.utc)
+                ))
+
+                await conn.execute(
+                    update(stories)
+                        .where(stories.c.id == story.id)
+                        .values(likes_count=stories.c.likes_count + diff))
+
+                await conn.execute(
+                    update(users)
+                        .where(users.c.id == ANONYMOUS_USER_ID)
+                        .values(likes_count=users.c.likes_count + diff))
+
+            async with request.db.acquire() as conn:
+                like = await conn.fetchrow(
+                    select([story_likes])
+                        .where(story_likes.c.user_id == ANONYMOUS_USER_ID)
+                        .where(story_likes.c.story_id == story.id)
+                        .order_by(story_likes.c.timestamp.desc()))
+
+            if like is None:
+                return web.Response(
+                    status=500,
+                    content_type="application/json",
+                    text=json.dumps(error(1006)))
+
+        return web.Response(
+            status=201,
+            content_type="application/json",
+            text=json.dumps(ok({
+                "user": {
+                    "id": like.user_id
+                },
+                "story": {
+                    "id": like.story_id
+                },
+                "state": like.state,
+                "timestamp": like.timestamp.isoformat()
+            })))
+
+    async def submit(self, request):  # TODO: Auth required
         """
         Sumbits a new story.
         """
         # Parses the content and ID of topic
         try:
             body = await request.json()
-            topic_id = int(body["topic"])
+
+            topic_id = int(body["topic"])  # TODO: Topic ID as slug
+
             content = body["content"]
         except (KeyError, ValueError):
             return web.Response(
@@ -416,7 +491,7 @@ class StoriesController:
 
             data = {
                 "id": identifier.to36(story.id),
-                "topic": None if topic is None else {
+                "topic": {"id": story.topic_id} if topic is None else {
                     "id": topic.id,
                     "slug": topic.slug,
                     "title": topic.title,
@@ -427,9 +502,9 @@ class StoriesController:
                 "content": story.content,
                 "likes_count": story.likes_count,
                 "comments_count": story.comments_count,
-                # "edited_date": story.edited_date.isoformat(),
                 "submitted_date": story.submitted_date.isoformat(),
-                "published_date": None
+                # "edited_date": story.edited_date.isoformat(),
+                "published_date": None  # obviously / trivial case
             }
 
             return web.Response(
@@ -441,73 +516,3 @@ class StoriesController:
                 status=500,
                 content_type="application/json",
                 text=json.dumps(error(1004)))
-
-    @staticmethod
-    async def _like(request, state: bool):
-        try:
-            id = identifier.from36(request.match_info["id"])
-        except (KeyError, ValueError):
-            return web.Response(
-                status=400,
-                content_type="application/json",
-                text=json.dumps(error(2003)))
-
-        diff = 1 if state is True else -1
-
-        async with request.db.acquire() as conn:
-            story = await conn.fetchrow(
-                select([stories]).where(stories.c.id == id))
-
-            if story is None or story.is_removed or not story.is_approved:
-                return web.Response(
-                    status=404,
-                    content_type="application/json",
-                    text=json.dumps(error(2003)))
-
-            like = await conn.fetchrow(
-                select([story_likes])
-                    .where(story_likes.c.user_id == ANONYMOUS_USER_ID)
-                    .where(story_likes.c.story_id == story.id)
-                    .order_by(story_likes.c.timestamp.desc()))
-
-        if like is None or like.state != state:
-            async with request.db.transaction() as conn:
-                await conn.execute(insert(story_likes).values(
-                    user_id=ANONYMOUS_USER_ID,
-                    story_id=story.id,
-                    state=state,
-                    timestamp=datetime.utcnow().replace(tzinfo=pytz.utc)
-                ))
-
-                await conn.execute(
-                    update(stories)
-                        .where(stories.c.id == story.id)
-                        .values(likes_count=stories.c.likes_count + diff))
-
-                await conn.execute(
-                    update(users)
-                        .where(users.c.id == ANONYMOUS_USER_ID)
-                        .values(likes_count=users.c.likes_count + diff))
-
-            async with request.db.acquire() as conn:
-                like = await conn.fetchrow(
-                    select([story_likes])
-                        .where(story_likes.c.user_id == ANONYMOUS_USER_ID)
-                        .where(story_likes.c.story_id == story.id)
-                        .order_by(story_likes.c.timestamp.desc()))
-
-            if like is None:
-                return web.Response(
-                    status=500,
-                    content_type="application/json",
-                    text=json.dumps(error(1006)))
-
-        return web.Response(
-            status=201,
-            content_type="application/json",
-            text=json.dumps(ok({
-                "user_id": like.user_id,
-                "story_id": like.story_id,
-                "state": like.state,
-                "timestamp": like.timestamp.isoformat()
-            })))

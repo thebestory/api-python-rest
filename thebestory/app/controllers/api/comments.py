@@ -348,7 +348,7 @@ class CommentsController:
                 "likes_count": comment.likes_count,
                 "comments_count": comment.comments_count,
                 "submitted_date": comment.submitted_date.isoformat(),
-                "edited_date": comment.edited_date.isoformat() if comment.edited_date else None
+                "edited_date": None  # obviously / trivial case
             }
 
             if story is None:
