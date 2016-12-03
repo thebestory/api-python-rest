@@ -16,5 +16,6 @@ table = sa.Table(
 
     sa.Column("stories_count", sa.Integer, default=0, nullable=False),
     sa.Column("comments_count", sa.Integer, default=0, nullable=False),
-    sa.Column("likes_count", sa.Integer, default=0, nullable=False),
+    sa.Column("story_likes_count", sa.Integer, default=0, nullable=False),
+    sa.Column("comment_likes_count", sa.Integer, default=0, nullable=False),
 )
