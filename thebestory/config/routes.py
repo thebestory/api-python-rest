@@ -42,6 +42,30 @@ ROUTES = [
     },
 
     # STORIES
+    {  # latest stories
+        "method": "GET",
+        "path": "/stories/latest",
+        "controller": api.stories.StoriesController,
+        "action": "latest",
+    },
+    {  # hot stories
+        "method": "GET",
+        "path": "/stories/hot",
+        "controller": api.stories.StoriesController,
+        "action": "hot",
+    },
+    {  # top stories
+        "method": "GET",
+        "path": "/stories/top",
+        "controller": api.stories.StoriesController,
+        "action": "top",
+    },
+    {  # random stories
+        "method": "GET",
+        "path": "/stories/random",
+        "controller": api.stories.StoriesController,
+        "action": "random",
+    },
     {  # story details
         "method": "GET",
         "path": "/stories/{id:[a-z0-9]+}",
@@ -71,30 +95,6 @@ ROUTES = [
         "path": "/stories",
         "controller": api.stories.StoriesController,
         "action": "submit",
-    },
-    {  # latest stories
-        "method": "GET",
-        "path": "/stories/latest",
-        "controller": api.stories.StoriesController,
-        "action": "latest",
-    },
-    {  # hot stories
-        "method": "GET",
-        "path": "/stories/hot",
-        "controller": api.stories.StoriesController,
-        "action": "hot",
-    },
-    {  # top stories
-        "method": "GET",
-        "path": "/stories/top",
-        "controller": api.stories.StoriesController,
-        "action": "top",
-    },
-    {  # random stories
-        "method": "GET",
-        "path": "/stories/random",
-        "controller": api.stories.StoriesController,
-        "action": "random",
     },
 
     # TOPICS
