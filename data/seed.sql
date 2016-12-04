@@ -13,6 +13,9 @@ INSERT INTO users (username) VALUES ('alex');
 --- TOPICS
 ---
 
+INSERT INTO topics (slug, title, description, icon) VALUES ('all', 'All',
+                                                            'All topics in one place. Yes, you can combine it.',
+                                                            'notavailable');
 INSERT INTO topics (slug, title, description, icon) VALUES ('weird', 'Weird',
                                                             'We all are weird, but there might be someone whose story will make your eyes pop out. Check it out right now!',
                                                             'notavailable');
