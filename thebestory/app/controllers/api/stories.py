@@ -302,7 +302,7 @@ class StoryController(web.View):
 
     async def delete(self):
         """
-        Delete a comment.
+        Delete a story.
         """
         try:
             id = identifier.from36(self.request.match_info["id"])
