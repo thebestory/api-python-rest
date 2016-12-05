@@ -13,9 +13,11 @@ INSERT INTO users (username) VALUES ('alex');
 --- TOPICS
 ---
 
-INSERT INTO topics (slug, title, description, icon) VALUES ('all', 'All',
-                                                            'All topics in one place. Yes, you can combine it.',
-                                                            'notavailable');
+INSERT INTO topics (slug, title, description, icon, is_public) VALUES ('all', 'All',
+                                                                       'All topics in one place. Yes, you can combine it. But... why you''re reading this? It''s pseudo topic...',
+                                                                       'notavailable',
+                                                                       FALSE);
+
 INSERT INTO topics (slug, title, description, icon) VALUES ('weird', 'Weird',
                                                             'We all are weird, but there might be someone whose story will make your eyes pop out. Check it out right now!',
                                                             'notavailable');
@@ -43,8 +45,12 @@ INSERT INTO topics (slug, title, description, icon) VALUES ('dreams', 'Dreams',
 INSERT INTO topics (slug, title, description, icon) VALUES ('scary', 'Scary',
                                                             'Sometimes our lives aren’t as good as we’d like to. But there are certain moments when we just get petrified. Read the stories about it, if you dare.',
                                                             'notavailable');
-INSERT INTO topics (slug, title, description, icon) VALUES ('sad', 'Sad', 'Not available', 'notavailable');
-INSERT INTO topics (slug, title, description, icon) VALUES ('daydreams', 'Daydreams', 'Not available', 'notavailable');
+INSERT INTO topics (slug, title, description, icon) VALUES ('sad', 'Sad',
+                                                            'Not available',
+                                                            'notavailable');
+INSERT INTO topics (slug, title, description, icon) VALUES ('daydreams', 'Daydreams',
+                                                            'Not available',
+                                                            'notavailable');
 
 ---
 --- STORIES
