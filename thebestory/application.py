@@ -5,7 +5,6 @@ The Bestory Project
 import asyncio
 import asyncpgsa
 from aiohttp import web
-from asyncpg.pool import Pool
 
 from thebestory import config
 
@@ -15,14 +14,15 @@ class Application:
         self._loop = asyncio.get_event_loop()
         self._app = web.Application(loop=self._loop)
 
-        self._db = None
+        self._db_pool = None
 
         self._controllers = {}
 
         self._config()
 
     async def _on_startup(self):
-        self._db = await asyncpgsa.create_pool(
+        """Boots main parts of application"""
+        self._db_pool = await asyncpgsa.create_pool(
             host=config.db.HOST,
             port=config.db.PORT,
             user=config.db.USER,
@@ -40,12 +40,10 @@ class Application:
         pass
 
     def _config(self):
+        """Configures application"""
+        self._config_patches()
         self._config_mw()
         self._config_routes()
-
-        from thebestory.app.lib import patch
-        from asyncpgsa.connection import SAConnection
-        SAConnection.fetchrow = patch.asyncpgsa.fetchrow
 
     def _config_mw(self):
         """Adds middlewares to the application instance"""
@@ -85,9 +83,17 @@ class Application:
                     route["controller"]
                 )
 
+    @staticmethod
+    def _config_patches():
+        """Adds patches to some parts of applications"""
+        from thebestory.app.lib import patch
+        from asyncpgsa.connection import SAConnection
+
+        SAConnection.fetchrow = patch.asyncpgsa.fetchrow
+
     @property
     def db(self) -> asyncpgsa.pool.SAPool:
-        return self._db
+        return self._db_pool
 
     def run(self):
         """Runs the server"""

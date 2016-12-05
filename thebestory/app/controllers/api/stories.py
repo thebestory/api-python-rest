@@ -9,9 +9,8 @@ from datetime import datetime
 import pytz
 from aiohttp import web
 from sqlalchemy.sql import insert, select, update
-from sqlalchemy.sql.expression import func
 
-from thebestory.app.lib import identifier, listing
+from thebestory.app.lib import identifier
 from thebestory.app.lib.api.response import *
 from thebestory.app.models import comments, stories, topics, users, story_likes
 
@@ -70,7 +69,7 @@ class CollectionController(web.View):
                 content_type="application/json",
                 text=json.dumps(error(2002)))
 
-        # Commit comment to DB, incrementing counters for topic and user
+        # Commit story to DB, incrementing counters for topic and user
         async with self.request.db.transaction() as conn:
 
             # FIXME: When asyncpgsa will replace nulls with default values
@@ -93,7 +92,7 @@ class CollectionController(web.View):
             await conn.execute(
                 update(users)
                     .where(users.c.id == ANONYMOUS_USER_ID)
-                    .values(stories_count=topics.c.stories_count + 1))
+                    .values(stories_count=users.c.stories_count + 1))
 
         # Is story committed actually?
         if story_id is not None:
@@ -110,13 +109,12 @@ class CollectionController(web.View):
             # FIXME: MODEL: STORY
             data = {
                 "id": identifier.to36(story.id),
-                "topic": {"id": story.topic_id} if topic is None else {
-                    "id": topic.id,  # FIXME: remove topic id from response
+                "topic": {
                     "slug": topic.slug,
                     "title": topic.title,
                     "description": topic.description,
                     "icon": topic.icon,
-                    "stories_count": topic.stories_count
+                    "stories_count": topic.stories_count + 1  # obviously
                 },
                 "content": story.content,
                 "likes_count": story.likes_count,
@@ -150,6 +148,8 @@ class StoryController(web.View):
                 content_type="application/json",
                 text=json.dumps(error(2003)))
 
+        # TODO: Join request
+
         async with self.request.db.acquire() as conn:
             story = await conn.fetchrow(
                 select([stories]).where(stories.c.id == id))
@@ -163,11 +163,17 @@ class StoryController(web.View):
             topic = await conn.fetchrow(
                 select([topics]).where(topics.c.id == story.topic_id))
 
+        # Check, if topic is present
+        if topic is None:
+            return web.Response(
+                status=400,
+                content_type="application/json",
+                text=json.dumps(error(2002)))
+
         # FIXME: MODEL: STORY
         data = {
             "id": identifier.to36(story.id),
-            "topic": {"id": story.topic_id} if topic is None else {
-                "id": topic.id,  # FIXME: remove topic id from response
+            "topic": {
                 "slug": topic.slug,
                 "title": topic.title,
                 "description": topic.description,
@@ -271,7 +277,7 @@ class LikeController(web.View):
                     "id": like.user_id
                 },
                 "story": {
-                    "id": like.story_id
+                    "id": identifier.to36(like.story_id)
                 },
                 "state": like.state,
                 "timestamp": like.timestamp.isoformat()
@@ -284,7 +290,7 @@ class CommentsController(web.View):
         Returns comments for the story.
         """
         try:
-            id = identifier.from36(request.match_info["id"])
+            id = identifier.from36(self.request.match_info["id"])
         except (KeyError, ValueError):
             return web.Response(
                 status=400,
@@ -292,7 +298,7 @@ class CommentsController(web.View):
                 text=json.dumps(error(2003)))
 
         # TODO: WTF is this? Rewrite via a cte query with depth
-        async with request.db.acquire() as conn:
+        async with self.request.db.acquire() as conn:
             story = await conn.fetchrow(
                 select([
                     stories.c.is_approved,
@@ -302,17 +308,11 @@ class CommentsController(web.View):
             # Comments is not available, if story is not exists, removed or
             # not approved yet.
 
-            if story is None or story.is_removed:
+            if story is None or story.is_removed or not story.is_approved:
                 return web.Response(
                     status=404,
                     content_type="application/json",
                     text=json.dumps(error(2003)))
-
-            if not story.is_approved:
-                return web.Response(
-                    status=200,
-                    content_type="application/json",
-                    text=json.dumps(error(4001)))
 
             comments_ = await conn.fetch(
                 select(

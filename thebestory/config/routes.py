@@ -32,7 +32,7 @@ ROUTES = [
     },
     {
         "path": "/topics/{slug:[a-z]+}/top",
-        "controller": api.topics.HotController
+        "controller": api.topics.TopController
     },
     {
         "path": "/topics/{slug:[a-z]+}/random",

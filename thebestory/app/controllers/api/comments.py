@@ -27,13 +27,13 @@ THEBESTORY_USER_ID = 2
 
 
 class CollectionController(web.View):
-    async def post(self, request):
+    async def post(self):
         """
         Sumbit a new comment. Returns a submitted comment.
         """
         # Parse the content and IDs and check, if only one of IDs is present
         try:
-            body = await request.json()
+            body = await self.request.json()
 
             story_id = body.get("story")
             parent_id = body.get("parent")
@@ -83,14 +83,13 @@ class CollectionController(web.View):
         # TODO: Block some ascii graphics, and other unwanted symbols...
 
         # Get story, where comment is submitting
-        async with request.db.acquire() as conn:
+        async with self.request.db.acquire() as conn:
             parent = None
 
             if parent_id:
                 parent = await conn.fetchrow(
                     select([comments]).where(comments.c.id == parent_id))
 
-                # XXX: Is user can comment a other's removed comment?
                 if parent is None or parent.is_removed:
                     return web.Response(
                         status=404,
@@ -110,7 +109,7 @@ class CollectionController(web.View):
                 text=json.dumps(error(2003)))
 
         # Commit comment to DB, incrementing counters for story and user
-        async with request.db.transaction() as conn:
+        async with self.request.db.transaction() as conn:
 
             # FIXME: When asyncpgsa will replace nulls with default values
             comment_id = await conn.fetchval(insert(comments).values(
@@ -136,7 +135,7 @@ class CollectionController(web.View):
 
         # Is comment committed actually?
         if comment_id is not None:
-            async with request.db.acquire() as conn:
+            async with self.request.db.acquire() as conn:
                 comment = await conn.fetchrow(
                     select(
                         [comments, users.c.username.label("author_username")])
@@ -164,11 +163,12 @@ class CollectionController(web.View):
                     "username": comment.author_username
                 },
                 "content": comment.content,
-                "story": {"id": comment.story_id} if story is None else {
+                "story": {
+                    "id": identifier.to36(comment.story_id)
+                } if story is None else {
                     "id": identifier.to36(story.id),
                     "content": story.content,
-                    "topic": {"id": story.topic_id} if topic is None else {
-                        "id": topic.id,  # FIXME: remove topic id from response
+                    "topic": None if topic is None else {
                         "slug": topic.slug,
                         "title": topic.title,
                         "description": topic.description,
@@ -253,11 +253,12 @@ class CommentController(web.View):
                 "username": comment.author_username
             },
             "content": comment.content,
-            "story": {"id": comment.story_id} if story is None else {
+            "story": {
+                "id": identifier.to36(comment.story_id)
+            } if story is None else {
                 "id": identifier.to36(story.id),
                 "content": story.content,
-                "topic": {"id": story.topic_id} if topic is None else {
-                    "id": topic.id,  # FIXME: remove topic id from response
+                "topic": None if topic is None else {
                     "slug": topic.slug,
                     "title": topic.title,
                     "description": topic.description,
@@ -371,7 +372,7 @@ class LikeController(web.View):
                     "id": like.user_id
                 },
                 "comment": {
-                    "id": like.comment_id
+                    "id": identifier.to36(like.comment_id)
                 },
                 "state": like.state,
                 "timestamp": like.timestamp.isoformat()

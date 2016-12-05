@@ -5,7 +5,7 @@ The Bestory Project
 import json
 
 from aiohttp import web
-from sqlalchemy.sql import insert, select
+from sqlalchemy.sql import select
 from sqlalchemy.sql.expression import func
 
 from thebestory.app.lib import identifier, listing
@@ -26,7 +26,7 @@ class CollectionController(web.View):
 
                 # FIXME: MODEL: TOPIC
                 data.append({
-                    "id": topic.id,
+                    # "id": topic.id,
                     "slug": topic.slug,
                     "title": topic.title,
                     "icon": topic.icon,
@@ -46,19 +46,18 @@ class TopicController(web.View):
         Returns the topic info.
         """
         try:
-            slug = int(self.request.match_info["slug"])
+            slug = self.request.match_info["slug"]
         except KeyError:
             return web.Response(
                 status=400,
                 content_type="application/json",
                 text=json.dumps(error(2002)))
 
-        # TODO: Hot spot (cache topics)
         async with self.request.db.acquire() as conn:
             topic = await conn.fetchrow(
                 select([topics]).where(topics.c.slug == slug))
 
-        if topic is None:
+        if topic is None or not topic.is_public:
             return web.Response(
                 status=404,
                 content_type="application/json",
@@ -70,7 +69,7 @@ class TopicController(web.View):
 
             # FIXME: MODEL: TOPIC
             text=json.dumps(ok({
-                "id": topic.id,
+                # "id": topic.id,
                 "slug": topic.slug,
                 "title": topic.title,
                 "icon": topic.icon,
@@ -89,7 +88,7 @@ class LatestController(web.View):
         Listings are supported.
         """
         try:
-            slug = int(self.request.match_info["slug"])
+            slug = self.request.match_info["slug"]
         except KeyError:
             return web.Response(
                 status=400,
@@ -107,19 +106,15 @@ class LatestController(web.View):
                 content_type="application/json",
                 text=json.dumps(error(3001)))
 
-        topic = None  # all
+        async with self.request.db.acquire() as conn:
+            topic = await conn.fetchrow(
+                select([topics]).where(topics.c.slug == slug))
 
-        if slug != "all":
-            # TODO: Hot spot (cache topics)
-            async with self.request.db.acquire() as conn:
-                topic = await conn.fetchrow(
-                    select([topics]).where(topics.c.slug == slug))
-
-                if topic is None:
-                    return web.Response(
-                        status=404,
-                        content_type="application/json",
-                        text=json.dumps(error(2002)))
+        if topic is None or not topic.is_public and topic.slug != "all":
+            return web.Response(
+                status=404,
+                content_type="application/json",
+                text=json.dumps(error(2002)))
 
         data = []
 
@@ -130,14 +125,16 @@ class LatestController(web.View):
             stories.c.likes_count,
             stories.c.comments_count,
             # stories.c.edited_date,
-            stories.c.published_date
+            stories.c.published_date,
+            topics.c.slug.label("topic_slug")
         ]) \
+            .where(topics.c.id == stories.c.topic_id) \
             .where(stories.c.is_approved == True) \
             .where(stories.c.is_removed == False) \
             .order_by(stories.c.published_date.desc()) \
             .limit(limit)
 
-        if slug != "all":
+        if topic.slug != "all":
             query = query.where(stories.c.topic_id == topic.id)
 
         # if pivot is none, fetch first page w/o any parameters
@@ -154,7 +151,8 @@ class LatestController(web.View):
                 data.append({
                     "id": identifier.to36(story.id),
                     "topic": {
-                        "id": story.topic_id
+                        # "id": story.topic_id
+                        "slug": story.topic_slug
                     },
                     "content": story.content,
                     "likes_count": story.likes_count,
@@ -176,7 +174,7 @@ class HotController(web.View):
     @staticmethod
     async def get():
         """
-        Returns the list of top stories in topic.
+        Returns the list of hot stories in topic.
         Listings are supported.
         """
         return web.Response(
@@ -195,7 +193,7 @@ class TopController(web.View):
         Listings are supported.
         """
         try:
-            slug = int(self.request.match_info["slug"])
+            slug = self.request.match_info["slug"]
         except KeyError:
             return web.Response(
                 status=400,
@@ -213,19 +211,15 @@ class TopController(web.View):
                 content_type="application/json",
                 text=json.dumps(error(3001)))
 
-        topic = None  # all
+        async with self.request.db.acquire() as conn:
+            topic = await conn.fetchrow(
+                select([topics]).where(topics.c.slug == slug))
 
-        if slug != "all":
-            # TODO: Hot spot (cache topics)
-            async with self.request.db.acquire() as conn:
-                topic = await conn.fetchrow(
-                    select([topics]).where(topics.c.slug == slug))
-
-                if topic is None:
-                    return web.Response(
-                        status=404,
-                        content_type="application/json",
-                        text=json.dumps(error(2002)))
+        if topic is None or not topic.is_public and topic.slug != "all":
+            return web.Response(
+                status=404,
+                content_type="application/json",
+                text=json.dumps(error(2002)))
 
         data = []
 
@@ -236,15 +230,17 @@ class TopController(web.View):
             stories.c.likes_count,
             stories.c.comments_count,
             # stories.c.edited_date,
-            stories.c.published_date
+            stories.c.published_date,
+            topics.c.slug.label("topic_slug")
         ]) \
+            .where(topics.c.id == stories.c.topic_id) \
             .where(stories.c.is_approved == True) \
             .where(stories.c.is_removed == False) \
             .order_by(stories.c.likes_count.desc()) \
             .order_by(stories.c.published_date.desc()) \
             .limit(limit)
 
-        if slug != "all":
+        if topic.slug != "all":
             query = query.where(stories.c.topic_id == topic.id)
 
         # if pivot is none, fetch first page w/o any parameters
@@ -261,7 +257,8 @@ class TopController(web.View):
                 data.append({
                     "id": identifier.to36(story.id),
                     "topic": {
-                        "id": story.topic_id
+                        # "id": story.topic_id
+                        "slug": story.topic_slug
                     },
                     "content": story.content,
                     "likes_count": story.likes_count,
@@ -285,7 +282,7 @@ class RandomController(web.View):
         Returns the list of random stories.
         """
         try:
-            slug = int(self.request.match_info["slug"])
+            slug = self.request.match_info["slug"]
         except KeyError:
             return web.Response(
                 status=400,
@@ -301,19 +298,15 @@ class RandomController(web.View):
                 content_type="application/json",
                 text=json.dumps(error(3001)))
 
-        topic = None  # all
+        async with self.request.db.acquire() as conn:
+            topic = await conn.fetchrow(
+                select([topics]).where(topics.c.slug == slug))
 
-        if slug != "all":
-            # TODO: Hot spot (cache topics)
-            async with self.request.db.acquire() as conn:
-                topic = await conn.fetchrow(
-                    select([topics]).where(topics.c.slug == slug))
-
-                if topic is None:
-                    return web.Response(
-                        status=404,
-                        content_type="application/json",
-                        text=json.dumps(error(2002)))
+        if topic is None or not topic.is_public and topic.slug != "all":
+            return web.Response(
+                status=404,
+                content_type="application/json",
+                text=json.dumps(error(2002)))
 
         data = []
 
@@ -324,14 +317,16 @@ class RandomController(web.View):
             stories.c.likes_count,
             stories.c.comments_count,
             # stories.c.edited_date,
-            stories.c.published_date
+            stories.c.published_date,
+            topics.c.slug.label("topic_slug")
         ]) \
+            .where(topics.c.id == stories.c.topic_id) \
             .where(stories.c.is_approved == True) \
             .where(stories.c.is_removed == False) \
             .order_by(func.random()) \
             .limit(limit)
 
-        if slug != "all":
+        if topic.slug != "all":
             query = query.where(stories.c.topic_id == topic.id)
 
         async with self.request.db.acquire() as conn:
@@ -341,7 +336,8 @@ class RandomController(web.View):
                 data.append({
                     "id": identifier.to36(story.id),
                     "topic": {
-                        "id": story.topic_id
+                        # "id": story.topic_id
+                        "slug": story.topic_slug
                     },
                     "content": story.content,
                     "likes_count": story.likes_count,
