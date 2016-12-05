@@ -64,19 +64,26 @@ class Application:
         """Adds routes to the application instance"""
 
         for route in config.ROUTES:
-            if route["controller"] not in self._controllers:
-                self._controllers[route["controller"]] = route["controller"]()
+            if route.get("method"):
+                if route["controller"] not in self._controllers:
+                    self._controllers[route["controller"]] = route["controller"]()
 
-            action = getattr(
-                self._controllers[route["controller"]],
-                route["action"],
-            )
+                action = getattr(
+                    self._controllers[route["controller"]],
+                    route["action"],
+                )
 
-            self._app.router.add_route(
-                route["method"],
-                route["path"],
-                action,
-            )
+                self._app.router.add_route(
+                    route["method"],
+                    route["path"],
+                    action,
+                )
+            else:
+                self._app.router.add_route(
+                    "*",
+                    route["path"],
+                    route["controller"]
+                )
 
     @property
     def db(self) -> asyncpgsa.pool.SAPool:
