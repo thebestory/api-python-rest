@@ -18,5 +18,7 @@ table = sa.Table(
     sa.Column("description", sa.Text, nullable=False),
     sa.Column("icon", sa.String(16), nullable=False),
 
+    sa.Column("is_public", sa.Boolean, default=True, nullable=False),
+
     sa.Column("stories_count", sa.Integer, default=0, nullable=False),
 )
