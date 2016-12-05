@@ -26,178 +26,12 @@ ANONYMOUS_USER_ID = 5
 THEBESTORY_USER_ID = 2
 
 
-class CommentsController:
-    async def details(self, request):
+class CollectionController(web.View):
+    async def post(self, request):
         """
-        Returns the comment info.
+        Sumbit a new comment. Returns a submitted comment.
         """
-        try:
-            id = identifier.from36(request.match_info["id"])
-        except (KeyError, ValueError):
-            return web.Response(
-                status=400,
-                content_type="application/json",
-                text=json.dumps(error(2004)))
-
-        async with request.db.acquire() as conn:
-            comment = await conn.fetchrow(
-                select([comments, users.c.username.label("author_username")])
-                    .where(users.c.id == comments.c.author_id)
-                    .where(comments.c.id == id))
-
-            if comment is None or comment.is_removed:
-                return web.Response(
-                    status=404,
-                    content_type="application/json",
-                    text=json.dumps(error(2004)))
-
-            story = await conn.fetchrow(
-                select([stories]).where(stories.c.id == comment.story_id))
-
-            if story is None or story.is_removed or not story.is_approved:
-                return web.Response(
-                    status=404,
-                    content_type="application/json",
-                    text=json.dumps(error(2003)))
-
-            topic = await conn.fetchrow(
-                select([topics]).where(topics.c.id == story.topic_id))
-
-        # TODO: extend with parent comment
-        data = {
-            "id": identifier.to36(comment.id),
-            "parent": None if comment.parent_id is None else {
-                "id": identifier.to36(comment.parent_id),
-            },
-            "author": {
-                "id": comment.author_id,
-                "username": comment.author_username
-            },
-            "content": comment.content,
-            "story": {"id": comment.story_id} if story is None else {
-                "id": identifier.to36(story.id),
-                "content": story.content,
-                "topic": {"id": story.topic_id} if topic is None else {
-                    "id": topic.id,
-                    "slug": topic.slug,
-                    "title": topic.title,
-                    "description": topic.description,
-                    "icon": topic.icon,
-                    "stories_count": topic.stories_count
-                },
-                "likes_count": story.likes_count,
-                "comments_count": story.comments_count,
-                # "edited_date": story.edited_date.isoformat(),
-                "published_date": story.published_date.isoformat()
-            },
-            "likes_count": comment.likes_count,
-            "comments_count": comment.comments_count,
-            "submitted_date": comment.submitted_date.isoformat(),
-            "edited_date": comment.edited_date.isoformat() if comment.edited_date else None
-        }
-
-        if story is None:
-            data = warning(2003, data)
-        elif topic is None:
-            data = warning(2002, data)
-        else:
-            data = ok(data)
-
-        return web.Response(
-            status=200,
-            content_type="application/json",
-            text=json.dumps(data))
-
-    async def like(self, request):
-        """
-        Likes the comment.
-        """
-        return await self._like(request, True)
-
-    async def unlike(self, request):
-        """
-        Unlikes the comment.
-        """
-        return await self._like(request, False)
-
-    @staticmethod
-    async def _like(request, state: bool):
-        try:
-            id = identifier.from36(request.match_info["id"])
-        except (KeyError, ValueError):
-            return web.Response(
-                status=400,
-                content_type="application/json",
-                text=json.dumps(error(2004)))
-
-        diff = 1 if state is True else -1
-
-        async with request.db.acquire() as conn:
-            comment = await conn.fetchrow(
-                select([comments]).where(comments.c.id == id))
-
-            if comment is None or comment.is_removed:
-                return web.Response(
-                    status=404,
-                    content_type="application/json",
-                    text=json.dumps(error(2004)))
-
-            like = await conn.fetchrow(
-                select([comment_likes])
-                    .where(comment_likes.c.user_id == ANONYMOUS_USER_ID)
-                    .where(comment_likes.c.comment_id == comment.id))
-
-        if like is None or like.state != state:
-            async with request.db.transaction() as conn:
-                await conn.execute(insert(comment_likes).values(
-                    user_id=ANONYMOUS_USER_ID,
-                    comment_id=comment.id,
-                    state=state,
-                    timestamp=datetime.utcnow().replace(tzinfo=pytz.utc)
-                ))
-
-                await conn.execute(
-                    update(comments)
-                        .where(comments.c.id == comment.id)
-                        .values(likes_count=comments.c.likes_count + diff))
-
-                await conn.execute(
-                    update(users)
-                        .where(users.c.id == ANONYMOUS_USER_ID)
-                        .values(comment_likes_count=users.c.comment_likes_count + diff))
-
-            async with request.db.acquire() as conn:
-                like = await conn.fetchrow(
-                    select([comment_likes])
-                        .where(comment_likes.c.user_id == ANONYMOUS_USER_ID)
-                        .where(comment_likes.c.comment_id == comment.id)
-                        .order_by(comment_likes.c.timestamp.desc()))
-
-            if like is None:
-                return web.Response(
-                    status=500,
-                    content_type="application/json",
-                    text=json.dumps(error(1006)))
-
-        return web.Response(
-            status=201,
-            content_type="application/json",
-            text=json.dumps(ok({
-                "user": {
-                    "id": like.user_id
-                },
-                "comment": {
-                    "id": like.comment_id
-                },
-                "state": like.state,
-                "timestamp": like.timestamp.isoformat()
-            })))
-
-    async def submit(self, request):
-        """
-        Sumbits a new comment.
-        """
-        # Parses the content and IDs and checks, if only one of IDs is present
+        # Parse the content and IDs and check, if only one of IDs is present
         try:
             body = await request.json()
 
@@ -235,7 +69,7 @@ class CommentsController:
                 text=json.dumps(error(2004)))
 
         # Content checks
-        if len(content) <= 0:
+        if len(content) <= 0:  # FIXME: Specify this value as a global setting
             return web.Response(
                 status=400,
                 content_type="application/json",
@@ -248,7 +82,7 @@ class CommentsController:
 
         # TODO: Block some ascii graphics, and other unwanted symbols...
 
-        # Getting story, where comment is submitting
+        # Get story, where comment is submitting
         async with request.db.acquire() as conn:
             parent = None
 
@@ -268,17 +102,17 @@ class CommentsController:
             story = await conn.fetchrow(
                 select([stories]).where(stories.c.id == story_id))
 
-        # Checks, if story is present and valid for comment submitting
+        # Check, if story is present and valid for comment submitting
         if story is None or story.is_removed or not story.is_approved:
             return web.Response(
                 status=404,
                 content_type="application/json",
                 text=json.dumps(error(2003)))
 
-        # Committing comment to DB, incrementing counters for story and user
+        # Commit comment to DB, incrementing counters for story and user
         async with request.db.transaction() as conn:
-            # TODO: Rewrite, when asyncpgsa replaces nulls with default values
 
+            # FIXME: When asyncpgsa will replace nulls with default values
             comment_id = await conn.fetchval(insert(comments).values(
                 parent_id=parent.id if parent is not None else None,
                 author_id=ANONYMOUS_USER_ID,
@@ -319,6 +153,7 @@ class CommentsController:
                     text=json.dumps(error(1005)))
 
             # TODO: extend with parent comment
+            # FIXME: MODEL: COMMENT
             data = {
                 "id": identifier.to36(comment.id),
                 "parent": None if comment.parent_id is None else {
@@ -333,7 +168,7 @@ class CommentsController:
                     "id": identifier.to36(story.id),
                     "content": story.content,
                     "topic": {"id": story.topic_id} if topic is None else {
-                        "id": topic.id,
+                        "id": topic.id,  # FIXME: remove topic id from response
                         "slug": topic.slug,
                         "title": topic.title,
                         "description": topic.description,
@@ -367,3 +202,177 @@ class CommentsController:
                 status=500,
                 content_type="application/json",
                 text=json.dumps(error(1005)))
+
+
+class CommentController(web.View):
+    async def get(self):
+        """
+        Returns the comment info.
+        """
+        try:
+            id = identifier.from36(self.request.match_info["id"])
+        except (KeyError, ValueError):
+            return web.Response(
+                status=400,
+                content_type="application/json",
+                text=json.dumps(error(2004)))
+
+        async with self.request.db.acquire() as conn:
+            comment = await conn.fetchrow(
+                select([comments, users.c.username.label("author_username")])
+                    .where(users.c.id == comments.c.author_id)
+                    .where(comments.c.id == id))
+
+            if comment is None or comment.is_removed:
+                return web.Response(
+                    status=404,
+                    content_type="application/json",
+                    text=json.dumps(error(2004)))
+
+            story = await conn.fetchrow(
+                select([stories]).where(stories.c.id == comment.story_id))
+
+            if story is None or story.is_removed or not story.is_approved:
+                return web.Response(
+                    status=404,
+                    content_type="application/json",
+                    text=json.dumps(error(2003)))
+
+            topic = await conn.fetchrow(
+                select([topics]).where(topics.c.id == story.topic_id))
+
+        # TODO: extend with parent comment
+        # FIXME: MODEL: COMMENT
+        data = {
+            "id": identifier.to36(comment.id),
+            "parent": None if comment.parent_id is None else {
+                "id": identifier.to36(comment.parent_id),
+            },
+            "author": {
+                "id": comment.author_id,
+                "username": comment.author_username
+            },
+            "content": comment.content,
+            "story": {"id": comment.story_id} if story is None else {
+                "id": identifier.to36(story.id),
+                "content": story.content,
+                "topic": {"id": story.topic_id} if topic is None else {
+                    "id": topic.id,  # FIXME: remove topic id from response
+                    "slug": topic.slug,
+                    "title": topic.title,
+                    "description": topic.description,
+                    "icon": topic.icon,
+                    "stories_count": topic.stories_count
+                },
+                "likes_count": story.likes_count,
+                "comments_count": story.comments_count,
+                # "edited_date": story.edited_date.isoformat(),
+                "published_date": story.published_date.isoformat()
+            },
+            "likes_count": comment.likes_count,
+            "comments_count": comment.comments_count,
+            "submitted_date": comment.submitted_date.isoformat(),
+            "edited_date": comment.edited_date.isoformat() if comment.edited_date else None
+        }
+
+        if story is None:
+            data = warning(2003, data)
+        elif topic is None:
+            data = warning(2002, data)
+        else:
+            data = ok(data)
+
+        return web.Response(
+            status=200,
+            content_type="application/json",
+            text=json.dumps(data))
+
+
+class LikeController(web.View):
+    async def post(self):
+        """
+        Likes the comment.
+        """
+        return await self._like(self.request, True)
+
+    async def delete(self):
+        """
+        Unlikes the comment.
+        """
+        return await self._like(self.request, False)
+
+    @staticmethod
+    async def _like(request, state: bool):
+        try:
+            id = identifier.from36(request.match_info["id"])
+        except (KeyError, ValueError):
+            return web.Response(
+                status=400,
+                content_type="application/json",
+                text=json.dumps(error(2004)))
+
+        diff = 1 if state else -1
+
+        async with request.db.acquire() as conn:
+            comment = await conn.fetchrow(
+                select([comments]).where(comments.c.id == id))
+
+            if comment is None or comment.is_removed:
+                return web.Response(
+                    status=404,
+                    content_type="application/json",
+                    text=json.dumps(error(2004)))
+
+            like = await conn.fetchrow(
+                select([comment_likes])
+                    .where(comment_likes.c.user_id == ANONYMOUS_USER_ID)
+                    .where(comment_likes.c.comment_id == comment.id))
+
+        if like is None or like.state != state:
+            async with request.db.transaction() as conn:
+                await conn.execute(insert(comment_likes).values(
+                    user_id=ANONYMOUS_USER_ID,
+                    comment_id=comment.id,
+                    state=state,
+                    timestamp=datetime.utcnow().replace(tzinfo=pytz.utc)
+                ))
+
+                await conn.execute(
+                    update(comments)
+                        .where(comments.c.id == comment.id)
+                        .values(likes_count=comments.c.likes_count + diff))
+
+                await conn.execute(
+                    update(users)
+                        .where(users.c.id == ANONYMOUS_USER_ID)
+                        .values(
+                        comment_likes_count=users.c.comment_likes_count + diff))
+
+            async with request.db.acquire() as conn:
+                like = await conn.fetchrow(
+                    select([comment_likes])
+                        .where(comment_likes.c.user_id == ANONYMOUS_USER_ID)
+                        .where(comment_likes.c.comment_id == comment.id)
+                        .order_by(comment_likes.c.timestamp.desc()))
+
+            if like is None:
+                return web.Response(
+                    status=500,
+                    content_type="application/json",
+                    text=json.dumps(error(1006)))
+
+        return web.Response(
+            status=201,
+            content_type="application/json",
+
+            # FIXME: MODEL: COMMENT LIKE
+            text=json.dumps(ok({
+                "user": {
+                    "id": like.user_id
+                },
+                "comment": {
+                    "id": like.comment_id
+                },
+                "state": like.state,
+                "timestamp": like.timestamp.isoformat()
+            })))
