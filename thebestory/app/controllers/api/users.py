@@ -3,6 +3,6 @@ The Bestory Project
 """
 
 
-class UsersController:
-    async def details(self, request):
+class UserController:
+    async def get(self):
         pass
