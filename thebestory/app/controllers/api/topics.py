@@ -207,7 +207,7 @@ class TopController(web.View):
                 self.request.url.query.get("before", None),
                 self.request.url.query.get("after", None),
                 self.request.url.query.get("limit", None))
-        except ValueError:
+        except (KeyError, ValueError):
             return web.Response(
                 status=400,
                 content_type="application/json",
