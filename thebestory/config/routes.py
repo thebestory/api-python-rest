@@ -9,14 +9,14 @@ from thebestory.app.controllers import api
 ROUTES = [
     # USERS
     {   # username can contains lowercase and uppercase letters and digits
-        "path": "/users/{username:[a-zA-Z0-9]+",
+        "path": "/users/{username:[a-zA-Z0-9]+}",
         "controller": api.users.UserController
     },
 
     # TOPICS
     {
         "path": "/topics",
-        "controller": api.topics.ColletionController
+        "controller": api.topics.CollectionController
     },
     {  # topic slug can contains only lowercase letters
         "path": "/topics/{slug:[a-z]+}",
@@ -42,7 +42,7 @@ ROUTES = [
     # COMMENTS
     {
         "path": "/comments",
-        "controller": api.comments.ColletionController
+        "controller": api.comments.CollectionController
     },
     {   # comment id can contains lowercase letters and digits
         "path": "/comments/{id:[a-z0-9]+}",
