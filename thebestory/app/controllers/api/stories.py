@@ -193,6 +193,156 @@ class StoryController(web.View):
             text=json.dumps(
                 ok(data) if topic is not None else warning(2002, data)))
 
+    async def patch(self):
+        """
+        Edit the story.
+        """
+        try:
+            id = identifier.from36(self.request.match_info["id"])
+        except (KeyError, ValueError):
+            return web.Response(
+                status=400,
+                content_type="application/json",
+                text=json.dumps(error(2003)))
+
+        try:
+            body = await self.request.json()
+            content = body.get("content")
+            is_approved = body.get("is_approved")
+
+            if is_approved is not None and not isinstance(is_approved, bool):
+                raise ValueError("Property `is_approved` must be boolean")
+        except Exception:  # FIXME: Specify the errors can raised here
+            return web.Response(
+                status=400,
+                content_type="application/json",
+                text=json.dumps(error(3002)))
+
+        if content is not None:
+            # Content checks
+            if len(content) <= 5:  # FIXME: Specify this value as a global setting
+                return web.Response(
+                    status=400,
+                    content_type="application/json",
+                    text=json.dumps(error(5004)))
+            elif len(content) > stories.c.content.type.length:
+                return web.Response(
+                    status=400,
+                    content_type="application/json",
+                    text=json.dumps(error(5006)))
+
+        async with self.request.db.acquire() as conn:
+            story = await conn.fetchrow(
+                select([stories]).where(stories.c.id == id))
+
+            if story is None or story.is_removed:
+                return web.Response(
+                    status=404,
+                    content_type="application/json",
+                    text=json.dumps(error(2003)))
+
+            topic = await conn.fetchrow(
+                select([topics]).where(topics.c.id == story.topic_id))
+
+        # Check, if topic is present
+        if topic is None:
+            return web.Response(
+                status=400,
+                content_type="application/json",
+                text=json.dumps(error(2002)))
+
+        if content is not None or is_approved is not None:
+            query = update(stories).where(stories.c.id == id)
+
+            if content is not None:
+                query = query.values(
+                    content=content,
+                    edited_date=datetime.utcnow().replace(tzinfo=pytz.utc)
+                )
+
+            if is_approved is not None:
+                if is_approved:
+                    query = query.values(
+                        is_approved=True,
+                        published_date=datetime.utcnow().replace(tzinfo=pytz.utc)
+                    )
+                else:
+                    query = query.values(
+                        is_approved=False,
+                    )
+
+            async with self.request.db.acquire() as conn:
+                await conn.execute(query)
+
+                story = await conn.fetchrow(
+                    select([stories]).where(stories.c.id == id))
+
+        return web.Response(
+            status=201,
+            content_type="application/json",
+
+            # FIXME: MODEL: STORY
+            text=json.dumps(ok({
+                "id": identifier.to36(story.id),
+                "topic": {
+                    "slug": topic.slug,
+                    "title": topic.title,
+                    "description": topic.description,
+                    "icon": topic.icon,
+                    "stories_count": topic.stories_count
+                },
+                "content": story.content,
+                "likes_count": story.likes_count,
+                "comments_count": story.comments_count,
+                "submitted_date": story.submitted_date.isoformat(),
+                # "edited_date": story.edited_date.isoformat(),
+                "published_date": story.published_date.isoformat() if story.published_date is not None else None
+            }))
+        )
+
+    async def delete(self):
+        """
+        Delete a comment.
+        """
+        try:
+            id = identifier.from36(self.request.match_info["id"])
+        except (KeyError, ValueError):
+            return web.Response(
+                status=400,
+                content_type="application/json",
+                text=json.dumps(error(2003)))
+
+        async with self.request.db.acquire() as conn:
+            story = await conn.fetchrow(
+                select([stories]).where(stories.c.id == id))
+
+            if story is None or story.is_removed:
+                return web.Response(
+                    status=404,
+                    content_type="application/json",
+                    text=json.dumps(error(2003)))
+
+        query = update(stories)\
+            .where(stories.c.id == id)\
+            .values(is_removed=True)
+
+        async with self.request.db.acquire() as conn:
+            await conn.execute(query)
+            story = await conn.fetchrow(
+                select([stories]).where(stories.c.id == id))
+
+        if story.is_removed:
+            return web.Response(
+                status=204,
+                content_type="application/json"
+            )
+        else:
+            return web.Response(
+                status=500,
+                content_type="application/json",
+                text=json.dumps(error(1004))
+            )
+
 
 class LikeController(web.View):
     async def post(self):

@@ -207,7 +207,7 @@ class CollectionController(web.View):
 class CommentController(web.View):
     async def get(self):
         """
-        Returns the comment info.
+        Returns the comment.
         """
         try:
             id = identifier.from36(self.request.match_info["id"])
@@ -287,6 +287,173 @@ class CommentController(web.View):
             status=200,
             content_type="application/json",
             text=json.dumps(data))
+
+    async def patch(self):
+        """
+        Edit the comment.
+        """
+        try:
+            id = identifier.from36(self.request.match_info["id"])
+        except (KeyError, ValueError):
+            return web.Response(
+                status=400,
+                content_type="application/json",
+                text=json.dumps(error(2004)))
+
+        try:
+            body = await self.request.json()
+            content = body.get("content")
+        except Exception:  # FIXME: Specify the errors can raised here
+            return web.Response(
+                status=400,
+                content_type="application/json",
+                text=json.dumps(error(3003)))
+
+        # Content checks
+        if len(content) <= 0:  # FIXME: Specify this value as a global setting
+            return web.Response(
+                status=400,
+                content_type="application/json",
+                text=json.dumps(error(5005)))
+        elif len(content) > comments.c.content.type.length:
+            return web.Response(
+                status=400,
+                content_type="application/json",
+                text=json.dumps(error(5007)))
+
+        async with self.request.db.acquire() as conn:
+            comment = await conn.fetchrow(
+                select([comments, users.c.username.label("author_username")])
+                    .where(users.c.id == comments.c.author_id)
+                    .where(comments.c.id == id))
+
+            if comment is None or comment.is_removed:
+                return web.Response(
+                    status=404,
+                    content_type="application/json",
+                    text=json.dumps(error(2004)))
+
+            story = await conn.fetchrow(
+                select([stories]).where(stories.c.id == comment.story_id))
+
+            if story is None or story.is_removed or not story.is_approved:
+                return web.Response(
+                    status=404,
+                    content_type="application/json",
+                    text=json.dumps(error(2003)))
+
+            topic = await conn.fetchrow(
+                select([topics]).where(topics.c.id == story.topic_id))
+
+        if content is not None:
+            query = update(comments).where(comments.c.id == id)
+
+            if content is not None:
+                query = query.values(
+                    content=content,
+                    edited_date=datetime.utcnow().replace(tzinfo=pytz.utc)
+                )
+
+            async with self.request.db.acquire() as conn:
+                await conn.execute(query)
+
+                comment = await conn.fetchrow(
+                    select(
+                        [comments, users.c.username.label("author_username")])
+                        .where(users.c.id == comments.c.author_id)
+                        .where(comments.c.id == id))
+
+        # FIXME: MODEL: COMMENT
+        data = {
+            "id": identifier.to36(comment.id),
+            "parent": None if comment.parent_id is None else {
+                "id": identifier.to36(comment.parent_id),
+            },
+            "author": {
+                "id": comment.author_id,
+                "username": comment.author_username
+            },
+            "content": comment.content,
+            "story": {
+                "id": identifier.to36(comment.story_id)
+            } if story is None else {
+                "id": identifier.to36(story.id),
+                "content": story.content,
+                "topic": None if topic is None else {
+                    "slug": topic.slug,
+                    "title": topic.title,
+                    "description": topic.description,
+                    "icon": topic.icon,
+                    "stories_count": topic.stories_count
+                },
+                "likes_count": story.likes_count,
+                "comments_count": story.comments_count,
+                # "edited_date": story.edited_date.isoformat(),
+                "published_date": story.published_date.isoformat()
+            },
+            "likes_count": comment.likes_count,
+            "comments_count": comment.comments_count,
+            "submitted_date": comment.submitted_date.isoformat(),
+            "edited_date": comment.edited_date.isoformat() if comment.edited_date else None
+        }
+
+        if story is None:
+            data = warning(2003, data)
+        elif topic is None:
+            data = warning(2002, data)
+        else:
+            data = ok(data)
+
+        return web.Response(
+            status=200,
+            content_type="application/json",
+            text=json.dumps(data)
+        )
+
+    async def delete(self):
+        """
+        Delete the comment.
+        """
+        try:
+            id = identifier.from36(self.request.match_info["id"])
+        except (KeyError, ValueError):
+            return web.Response(
+                status=400,
+                content_type="application/json",
+                text=json.dumps(error(2004)))
+
+        async with self.request.db.acquire() as conn:
+            comment = await conn.fetchrow(
+                select([comments, users.c.username.label("author_username")])
+                    .where(users.c.id == comments.c.author_id)
+                    .where(comments.c.id == id))
+
+            if comment is None or comment.is_removed:
+                return web.Response(
+                    status=404,
+                    content_type="application/json",
+                    text=json.dumps(error(2004)))
+
+        query = update(comments)\
+            .where(comments.c.id == id)\
+            .values(is_removed=True)
+
+        async with self.request.db.acquire() as conn:
+            await conn.execute(query)
+            comment = await conn.fetchrow(
+                select([comments]).where(comments.c.id == id))
+
+        if comment.is_removed:
+            return web.Response(
+                status=204,
+                content_type="application/json"
+            )
+        else:
+            return web.Response(
+                status=500,
+                content_type="application/json",
+                text=json.dumps(error(1005))
+            )
 
 
 class LikeController(web.View):
