@@ -54,33 +54,6 @@ ROUTES = [
     },
 
     # STORIES
-
-    # these routes is needed for backward compatibility
-    {
-        "method": "GET",
-        "path": "/stories/latest",
-        "controller": api.stories.BackwardCompatibilityController,
-        "action": "latest",
-    },
-    {
-        "method": "GET",
-        "path": "/stories/hot",
-        "controller": api.stories.BackwardCompatibilityController,
-        "action": "hot",
-    },
-    {
-        "method": "GET",
-        "path": "/stories/top",
-        "controller": api.stories.BackwardCompatibilityController,
-        "action": "top",
-    },
-    {
-        "method": "GET",
-        "path": "/stories/random",
-        "controller": api.stories.BackwardCompatibilityController,
-        "action": "random",
-    },
-
     {
         "path": "/stories",
         "controller": api.stories.CollectionController
@@ -94,7 +67,7 @@ ROUTES = [
         "controller": api.stories.LikeController
     },
     {
-        "path": "/stories/{id:[a-z0-9]+}",
+        "path": "/stories/{id:[a-z0-9]+}/comments",
         "controller": api.stories.CommentsController
     },
 ]
