@@ -22,56 +22,7 @@ ANONYMOUS_USER_ID = 5
 THEBESTORY_USER_ID = 2
 
 
-class StoryController(web.View):
-    async def get(self):
-        """
-        Returns the story info.
-        """
-        try:
-            id = identifier.from36(self.request.match_info["id"])
-        except (KeyError, ValueError):
-            return web.Response(
-                status=400,
-                content_type="application/json",
-                text=json.dumps(error(2003)))
-
-        async with self.request.db.acquire() as conn:
-            story = await conn.fetchrow(
-                select([stories]).where(stories.c.id == id))
-
-            if story is None or story.is_removed or not story.is_approved:
-                return web.Response(
-                    status=404,
-                    content_type="application/json",
-                    text=json.dumps(error(2003)))
-
-            topic = await conn.fetchrow(
-                select([topics]).where(topics.c.id == story.topic_id))
-
-        # FIXME: MODEL: STORY
-        data = {
-            "id": identifier.to36(story.id),
-            "topic": {"id": story.topic_id} if topic is None else {
-                "id": topic.id,  # FIXME: remove topic id from response
-                "slug": topic.slug,
-                "title": topic.title,
-                "description": topic.description,
-                "icon": topic.icon,
-                "stories_count": topic.stories_count
-            },
-            "content": story.content,
-            "likes_count": story.likes_count,
-            "comments_count": story.comments_count,
-            # "edited_date": story.edited_date.isoformat(),
-            "published_date": story.published_date.isoformat()
-        }
-
-        return web.Response(
-            status=200,
-            content_type="application/json",
-            text=json.dumps(
-                ok(data) if topic is not None else warning(2002, data)))
-
+class CollectionController(web.View):
     async def post(self):  # TODO: Auth required
         """
         Submit a new story. Returns a submitted story.
@@ -119,6 +70,7 @@ class StoryController(web.View):
                 content_type="application/json",
                 text=json.dumps(error(2002)))
 
+        # Commit comment to DB, incrementing counters for topic and user
         async with self.request.db.transaction() as conn:
 
             # FIXME: When asyncpgsa will replace nulls with default values
@@ -183,6 +135,57 @@ class StoryController(web.View):
                 status=500,
                 content_type="application/json",
                 text=json.dumps(error(1004)))
+
+
+class StoryController(web.View):
+    async def get(self):
+        """
+        Returns the story info.
+        """
+        try:
+            id = identifier.from36(self.request.match_info["id"])
+        except (KeyError, ValueError):
+            return web.Response(
+                status=400,
+                content_type="application/json",
+                text=json.dumps(error(2003)))
+
+        async with self.request.db.acquire() as conn:
+            story = await conn.fetchrow(
+                select([stories]).where(stories.c.id == id))
+
+            if story is None or story.is_removed or not story.is_approved:
+                return web.Response(
+                    status=404,
+                    content_type="application/json",
+                    text=json.dumps(error(2003)))
+
+            topic = await conn.fetchrow(
+                select([topics]).where(topics.c.id == story.topic_id))
+
+        # FIXME: MODEL: STORY
+        data = {
+            "id": identifier.to36(story.id),
+            "topic": {"id": story.topic_id} if topic is None else {
+                "id": topic.id,  # FIXME: remove topic id from response
+                "slug": topic.slug,
+                "title": topic.title,
+                "description": topic.description,
+                "icon": topic.icon,
+                "stories_count": topic.stories_count
+            },
+            "content": story.content,
+            "likes_count": story.likes_count,
+            "comments_count": story.comments_count,
+            # "edited_date": story.edited_date.isoformat(),
+            "published_date": story.published_date.isoformat()
+        }
+
+        return web.Response(
+            status=200,
+            content_type="application/json",
+            text=json.dumps(
+                ok(data) if topic is not None else warning(2002, data)))
 
 
 class LikeController(web.View):
