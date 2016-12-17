@@ -4,7 +4,8 @@ The Bestory Project
 
 import sqlalchemy as sa
 
-from thebestory.app.lib import db
+from thebestory.lib import db
+
 
 table = sa.Table(
     "users",

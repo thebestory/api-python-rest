@@ -10,9 +10,9 @@ import pytz
 from aiohttp import web
 from sqlalchemy.sql import insert, select, update
 
-from thebestory.app.lib import identifier
-from thebestory.app.lib.api.response import *
-from thebestory.app.models import comments, stories, topics, users, story_likes
+from thebestory.lib import identifier
+from thebestory.lib.api.response import *
+from thebestory.models import comments, stories, story_likes, topics, users
 
 # User ID
 ANONYMOUS_USER_ID = 5

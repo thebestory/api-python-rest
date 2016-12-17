@@ -4,7 +4,8 @@ The Bestory Project
 
 from enum import IntEnum
 from typing import Optional, Union, Tuple
-from thebestory.app.lib import identifier
+
+from . import identifier
 
 
 class Direction(IntEnum):

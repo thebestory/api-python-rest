@@ -2,12 +2,13 @@
 The Bestory Project
 """
 
-import pytz
 from datetime import datetime
 from enum import Enum
+
+import pytz
 import sqlalchemy as sa
 
-from thebestory.app.lib import db
+from thebestory.lib import db
 
 
 class State(Enum):

@@ -9,9 +9,9 @@ import pytz
 from aiohttp import web
 from sqlalchemy.sql import insert, select, update
 
-from thebestory.app.lib import identifier
-from thebestory.app.lib.api.response import *
-from thebestory.app.models import (
+from thebestory.lib import identifier
+from thebestory.lib.api.response import *
+from thebestory.models import (
     comment_likes,
     comments,
     stories,

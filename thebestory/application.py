@@ -86,7 +86,7 @@ class Application:
     @staticmethod
     def _config_patches():
         """Adds patches to some parts of applications"""
-        from thebestory.app.lib import patch
+        from thebestory.lib import patch
         from asyncpgsa.connection import SAConnection
 
         SAConnection.fetchrow = patch.asyncpgsa.fetchrow

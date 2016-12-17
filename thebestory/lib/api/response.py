@@ -4,7 +4,7 @@ The Bestory Project
 
 from collections import OrderedDict
 
-from thebestory.app.lib.api.code import WARNING, ERROR
+from .code import ERROR, WARNING
 
 __all__ = [
     "ok",

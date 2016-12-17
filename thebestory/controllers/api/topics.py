@@ -8,9 +8,9 @@ from aiohttp import web
 from sqlalchemy.sql import select
 from sqlalchemy.sql.expression import func
 
-from thebestory.app.lib import identifier, listing
-from thebestory.app.lib.api.response import *
-from thebestory.app.models import stories, topics
+from thebestory.lib import identifier, listing
+from thebestory.lib.api.response import *
+from thebestory.models import stories, topics
 
 
 class CollectionController(web.View):

@@ -2,8 +2,7 @@
 The Bestory Project
 """
 
-from thebestory.app import controllers
-from thebestory.app.controllers import api
+from thebestory.controllers import api
 
 
 ROUTES = [
