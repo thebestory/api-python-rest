@@ -2,10 +2,9 @@
 The Bestory Project
 """
 
-from datetime import datetime
 from enum import Enum
 
-import pytz
+import pendulum
 import sqlalchemy as sa
 
 from thebestory.lib import db
@@ -28,7 +27,7 @@ story_table = sa.Table(
     sa.Column("state", sa.Boolean, nullable=False),
 
     sa.Column("timestamp", db.types.DateTime,
-              default=lambda: datetime.utcnow().replace(tzinfo=pytz.utc),
+              default=pendulum.utcnow(),
               nullable=False)
 )
 
@@ -44,6 +43,6 @@ comment_table = sa.Table(
     sa.Column("state", sa.Boolean, nullable=False),
 
     sa.Column("timestamp", db.types.DateTime,
-              default=lambda: datetime.utcnow().replace(tzinfo=pytz.utc),
+              default=pendulum.utcnow(),
               nullable=False)
 )

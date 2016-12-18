@@ -5,7 +5,7 @@ The Bestory Project
 import json
 from datetime import datetime
 
-import pytz
+import pendulum
 from aiohttp import web
 from sqlalchemy.sql import insert, select, update
 
@@ -120,7 +120,7 @@ class CollectionController(web.View):
                 likes_count=0,
                 comments_count=0,
                 is_removed=False,
-                submitted_date=datetime.utcnow().replace(tzinfo=pytz.utc)
+                submitted_date=pendulum.utcnow()
             ))
 
             await conn.execute(
@@ -351,7 +351,7 @@ class CommentController(web.View):
             if content is not None:
                 query = query.values(
                     content=content,
-                    edited_date=datetime.utcnow().replace(tzinfo=pytz.utc)
+                    edited_date=pendulum.utcnow()
                 )
 
             async with self.request.db.acquire() as conn:
@@ -502,7 +502,7 @@ class LikeController(web.View):
                     user_id=ANONYMOUS_USER_ID,
                     comment_id=comment.id,
                     state=state,
-                    timestamp=datetime.utcnow().replace(tzinfo=pytz.utc)
+                    timestamp=pendulum.utcnow()
                 ))
 
                 await conn.execute(

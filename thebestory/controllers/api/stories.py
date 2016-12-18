@@ -6,7 +6,7 @@ import json
 from collections import OrderedDict
 from datetime import datetime
 
-import pytz
+import pendulum
 from aiohttp import web
 from sqlalchemy.sql import insert, select, update
 
@@ -81,7 +81,7 @@ class CollectionController(web.View):
                 comments_count=0,
                 is_approved=False,
                 is_removed=False,
-                submitted_date=datetime.utcnow().replace(tzinfo=pytz.utc)
+                submitted_date=pendulum.utcnow()
             ))
 
             await conn.execute(
@@ -257,14 +257,14 @@ class StoryController(web.View):
             if content is not None:
                 query = query.values(
                     content=content,
-                    edited_date=datetime.utcnow().replace(tzinfo=pytz.utc)
+                    edited_date=pendulum.utcnow()
                 )
 
             if is_approved is not None:
                 if is_approved:
                     query = query.values(
                         is_approved=True,
-                        published_date=datetime.utcnow().replace(tzinfo=pytz.utc)
+                        published_date=pendulum.utcnow()
                     )
                 else:
                     query = query.values(
@@ -390,7 +390,7 @@ class LikeController(web.View):
                     user_id=ANONYMOUS_USER_ID,
                     story_id=story.id,
                     state=state,
-                    timestamp=datetime.utcnow().replace(tzinfo=pytz.utc)
+                    timestamp=pendulum.utcnow()
                 ))
 
                 await conn.execute(

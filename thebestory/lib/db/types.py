@@ -4,7 +4,7 @@ The Bestory Project
 
 import datetime
 
-import pytz
+import pendulum
 from sqlalchemy import types
 
 
@@ -23,9 +23,9 @@ class DateTime(types.TypeDecorator):
                                 repr(value))
             elif value.tzinfo is None:
                 raise ValueError('Naive datetime is disallowed')
-            return value.astimezone(pytz.utc)
+            return value.astimezone(pendulum.UTC)
 
     def process_result_value(self, value, dialect):
         if value is not None and value.tzinfo is None:
-            value = value.replace(tzinfo=pytz.utc)
+            value = value.replace(tzinfo=pendulum.UTC)
         return value
