@@ -55,13 +55,13 @@ class Application:
 
             return bind_db
 
-        self._app.middlewares.extend(config.MW)
+        self._app.middlewares.extend(config.mw)
         self._app.middlewares.append(middleware_db)
 
     def _config_routes(self):
         """Adds routes to the application instance"""
 
-        for route in config.ROUTES:
+        for route in config.routes:
             if route.get("method"):
                 if route["controller"] not in self._controllers:
                     self._controllers[route["controller"]] = route["controller"]()

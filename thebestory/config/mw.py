@@ -1,5 +1,0 @@
-"""
-The Bestory Project
-"""
-
-MW = []
