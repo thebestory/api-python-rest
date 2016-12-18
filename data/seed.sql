@@ -15,42 +15,42 @@ INSERT INTO users (username) VALUES ('alex');
 
 INSERT INTO topics (slug, title, description, icon, is_public) VALUES ('all', 'All',
                                                                        'All topics in one place. Yes, you can combine it. But... why you''re reading this? It''s pseudo topic...',
-                                                                       'notavailable',
+                                                                       '',
                                                                        FALSE);
 
 INSERT INTO topics (slug, title, description, icon) VALUES ('weird', 'Weird',
                                                             'We all are weird, but there might be someone whose story will make your eyes pop out. Check it out right now!',
-                                                            'notavailable');
+                                                            '');
 INSERT INTO topics (slug, title, description, icon) VALUES ('love', 'Love',
                                                             'Are you in doubt whether love exists or not? We assure you it does, all the evidence in the touching stories by our members!',
-                                                            'notavailable');
+                                                            '');
 INSERT INTO topics (slug, title, description, icon) VALUES ('funny', 'Funny',
                                                             'We all know we are fond of laughing. So, why would we restrain ourselves from it? Enjoy the hilarious moments of lives of our subscribers.',
-                                                            'notavailable');
+                                                            '');
 INSERT INTO topics (slug, title, description, icon) VALUES ('intimate', 'Intimate',
                                                             'They say sex brings people together. Now it’s time to check this and read a couple of hot stories from our members.',
-                                                            'notavailable');
+                                                            '');
 INSERT INTO topics (slug, title, description, icon) VALUES ('happiness', 'Happiness',
                                                             'Here you will see what makes us try again and again, what makes our lives meaningful. The moments when we are infinitely happy.',
-                                                            'notavailable');
+                                                            '');
 INSERT INTO topics (slug, title, description, icon) VALUES ('lifehack', 'Lifehack',
                                                             'We guess you couldn’t even imagine that there is such an easy and satisfying way to do it. Here, our members will show you!',
-                                                            'notavailable');
-INSERT INTO topics (slug, title, description, icon) VALUES ('good-deeds', 'Good deeds',
+                                                            '');
+INSERT INTO topics (slug, title, description, icon) VALUES ('gooddeeds', 'Good deeds',
                                                             'Read the stories of our members and make yourself sure that our world is full of people with hearts of gold!',
-                                                            'notavailable');
+                                                            '');
 INSERT INTO topics (slug, title, description, icon) VALUES ('dreams', 'Dreams',
                                                             'What can you see, feel or make while you are asleep? Anything you have ever thought of and even more. Find out what others have dreamt of!',
-                                                            'notavailable');
+                                                            '');
 INSERT INTO topics (slug, title, description, icon) VALUES ('scary', 'Scary',
                                                             'Sometimes our lives aren’t as good as we’d like to. But there are certain moments when we just get petrified. Read the stories about it, if you dare.',
-                                                            'notavailable');
+                                                            '');
 INSERT INTO topics (slug, title, description, icon) VALUES ('sad', 'Sad',
                                                             'Not available',
-                                                            'notavailable');
+                                                            '');
 INSERT INTO topics (slug, title, description, icon) VALUES ('daydreams', 'Daydreams',
                                                             'Not available',
-                                                            'notavailable');
+                                                            '');
 
 ---
 --- STORIES
