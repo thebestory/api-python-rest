@@ -25,7 +25,7 @@ CREATE TABLE comments (
 CREATE TABLE stories (
   id             INTEGER                                NOT NULL,
   author_id      INTEGER                                NOT NULL,
-  topic_id       INTEGER                                NOT NULL,
+  topic_id       INTEGER,
   content        TEXT                                   NOT NULL,
   likes_count    INTEGER DEFAULT 0                      NOT NULL,
   comments_count INTEGER DEFAULT 0                      NOT NULL,

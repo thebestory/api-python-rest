@@ -18,7 +18,7 @@ table = sa.Table(
     sa.Column("author_id", sa.Integer, sa.ForeignKey("users.id"), index=True,
               nullable=False),
     sa.Column("topic_id", sa.Integer, sa.ForeignKey("topics.id"), index=True,
-              nullable=False),
+              nullable=True),
 
     sa.Column("content", sa.Text(8192), nullable=False),
 

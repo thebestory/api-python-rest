@@ -4,13 +4,13 @@ The Bestory Project
 
 import json
 from collections import OrderedDict
-from datetime import datetime
 
 import pendulum
 from aiohttp import web
 from sqlalchemy.sql import insert, select, update
 
 from thebestory.lib import identifier
+from thebestory.lib.api import renderer
 from thebestory.lib.api.response import *
 from thebestory.models import comments, stories, story_likes, topics, users
 
@@ -34,105 +34,83 @@ class CollectionController(web.View):
             return web.Response(
                 status=400,
                 content_type="application/json",
-                text=json.dumps(error(3002)))
-        try:
-            slug = body["topic"]
-        except KeyError:
-            return web.Response(
-                status=400,
-                content_type="application/json",
-                text=json.dumps(error(2002)))
+                text=json.dumps(error(3002))
+            )
 
         # Content checks
         if len(content) <= 5:  # FIXME: Specify this value as a global setting
             return web.Response(
                 status=400,
                 content_type="application/json",
-                text=json.dumps(error(5004)))
+                text=json.dumps(error(5004))
+            )
         elif len(content) > stories.c.content.type.length:
             return web.Response(
                 status=400,
                 content_type="application/json",
-                text=json.dumps(error(5006)))
+                text=json.dumps(error(5006))
+            )
 
         # TODO: Block some ascii graphics, and other unwanted symbols...
 
-        # Get topic, where story is submitting
-        async with self.request.db.acquire() as conn:
-            topic = await conn.fetchrow(
-                select([topics]).where(topics.c.slug == slug))
+        row = None
 
-        # Check, if topic is present and valid for submitting
-        if topic is None or not topic.is_public:
-            return web.Response(
-                status=400,
-                content_type="application/json",
-                text=json.dumps(error(2002)))
-
-        # Commit story to DB, incrementing counters for topic and user
-        async with self.request.db.transaction() as conn:
-
-            # FIXME: When asyncpgsa will replace nulls with default values
-            story_id = await conn.fetchval(insert(stories).values(
-                author_id=ANONYMOUS_USER_ID,
-                topic_id=topic.id,
-                content=content,
-                likes_count=0,
-                comments_count=0,
-                is_approved=False,
-                is_removed=False,
-                submitted_date=pendulum.utcnow()
-            ))
-
-            await conn.execute(
-                update(topics)
-                    .where(topics.c.id == topic.id)
-                    .values(stories_count=topics.c.stories_count + 1))
-
-            await conn.execute(
-                update(users)
-                    .where(users.c.id == ANONYMOUS_USER_ID)
-                    .values(stories_count=users.c.stories_count + 1))
-
-        # Is story committed actually?
-        if story_id is not None:
+        try:
+            # Commit story to DB, incrementing counters for topic and user
             async with self.request.db.acquire() as conn:
-                story = await conn.fetchrow(
-                    select([stories]).where(stories.c.id == story_id))
 
-            if story is None:
-                return web.Response(
-                    status=500,
-                    content_type="application/json",
-                    text=json.dumps(error(1004)))
+                # FIXME: When asyncpgsa will replace nulls with default values
+                story_id = await conn.fetchval(insert(stories).values(
+                    author_id=ANONYMOUS_USER_ID,
+                    topic_id=None,
+                    content=content,
+                    likes_count=0,
+                    comments_count=0,
+                    is_approved=False,
+                    is_removed=False,
+                    submitted_date=pendulum.utcnow()
+                ))
 
-            # FIXME: MODEL: STORY
-            data = {
-                "id": identifier.to36(story.id),
-                "topic": {
-                    "slug": topic.slug,
-                    "title": topic.title,
-                    "description": topic.description,
-                    "icon": topic.icon,
-                    "stories_count": topic.stories_count + 1  # obviously
-                },
-                "content": story.content,
-                "likes_count": story.likes_count,
-                "comments_count": story.comments_count,
-                "submitted_date": story.submitted_date.isoformat(),
-                # "edited_date": story.edited_date.isoformat(),
-                "published_date": None  # obviously
-            }
+                if story_id is None:
+                    raise ValueError
 
-            return web.Response(
-                status=201,
-                content_type="application/json",
-                text=json.dumps(ok(data)))
-        else:
+                row = await conn.fetchrow(
+                    select([
+                        stories
+                    ])
+                        .where(stories.c.id == story_id)
+                        .order_by(stories.c.submitted_date.desc())
+                        .apply_labels()
+                )
+
+                if row is None:
+                    raise ValueError
+        except ValueError:
             return web.Response(
                 status=500,
                 content_type="application/json",
-                text=json.dumps(error(1004)))
+                text=json.dumps(error(1004))
+            )
+
+        # POST
+        # row is not None (successfully committed)
+
+        data = renderer.story({
+            "id": row.stories_id,
+            "topic": None,
+            "content": row.stories_content,
+            "likes_count": row.stories_likes_count,
+            "comments_count": row.stories_comments_count,
+            "submitted_date": row.stories_submitted_date,
+            "edited_date": row.stories_edited_date,
+            "published_date": row.stories_published_date
+        })
+
+        return web.Response(
+            status=201,
+            content_type="application/json",
+            text=json.dumps(ok(data))
+        )
 
 
 class StoryController(web.View):
@@ -146,52 +124,51 @@ class StoryController(web.View):
             return web.Response(
                 status=400,
                 content_type="application/json",
-                text=json.dumps(error(2003)))
-
-        # TODO: Join request
+                text=json.dumps(error(2003))
+            )
 
         async with self.request.db.acquire() as conn:
-            story = await conn.fetchrow(
-                select([stories]).where(stories.c.id == id))
+            row = await conn.fetchrow(
+                select([
+                    stories,
+                    topics
+                ])
+                    .where(stories.c.id == id)
+                    .where(stories.c.topic_id != None)
+                    .where(topics.c.id == stories.c.topic_id)
+                    .apply_labels()
+            )
 
-            if story is None or story.is_removed or not story.is_approved:
-                return web.Response(
-                    status=404,
-                    content_type="application/json",
-                    text=json.dumps(error(2003)))
-
-            topic = await conn.fetchrow(
-                select([topics]).where(topics.c.id == story.topic_id))
-
-        # Check, if topic is present
-        if topic is None:
+        if row is None or row.stories_is_removed or not row.stories_is_approved:
             return web.Response(
-                status=400,
+                status=404,
                 content_type="application/json",
-                text=json.dumps(error(2002)))
+                text=json.dumps(error(2003))
+            )
 
-        # FIXME: MODEL: STORY
-        data = {
-            "id": identifier.to36(story.id),
+        data = renderer.story({
+            "id": row.stories_id,
             "topic": {
-                "slug": topic.slug,
-                "title": topic.title,
-                "description": topic.description,
-                "icon": topic.icon,
-                "stories_count": topic.stories_count
+                "id": row.topics_id,
+                "slug": row.topics_slug,
+                "title": row.topics_title,
+                "icon": row.topics_icon,
+                "description": row.topics_description,
+                "stories_count": row.topics_stories_count
             },
-            "content": story.content,
-            "likes_count": story.likes_count,
-            "comments_count": story.comments_count,
-            # "edited_date": story.edited_date.isoformat(),
-            "published_date": story.published_date.isoformat()
-        }
+            "content": row.stories_content,
+            "likes_count": row.stories_likes_count,
+            "comments_count": row.stories_comments_count,
+            "submitted_date": row.stories_submitted_date,
+            "edited_date": row.stories_edited_date,
+            "published_date": row.stories_published_date
+        })
 
         return web.Response(
             status=200,
             content_type="application/json",
-            text=json.dumps(
-                ok(data) if topic is not None else warning(2002, data)))
+            text=json.dumps(ok(data))
+        )
 
     async def patch(self):
         """
@@ -203,20 +180,24 @@ class StoryController(web.View):
             return web.Response(
                 status=400,
                 content_type="application/json",
-                text=json.dumps(error(2003)))
+                text=json.dumps(error(2003))
+            )
 
         try:
             body = await self.request.json()
             content = body.get("content")
+            slug = body.get("topic")
             is_approved = body.get("is_approved")
 
-            if is_approved is not None and not isinstance(is_approved, bool):
-                raise ValueError("Property `is_approved` must be boolean")
+            if is_approved is not None:
+                if not isinstance(is_approved, bool):
+                    raise ValueError("Property ``is_approved`` must be boolean")
         except Exception:  # FIXME: Specify the errors can raised here
             return web.Response(
                 status=400,
                 content_type="application/json",
-                text=json.dumps(error(3002)))
+                text=json.dumps(error(3002))
+            )
 
         if content is not None:
             # Content checks
@@ -224,41 +205,67 @@ class StoryController(web.View):
                 return web.Response(
                     status=400,
                     content_type="application/json",
-                    text=json.dumps(error(5004)))
+                    text=json.dumps(error(5004))
+                )
             elif len(content) > stories.c.content.type.length:
                 return web.Response(
                     status=400,
                     content_type="application/json",
-                    text=json.dumps(error(5006)))
+                    text=json.dumps(error(5006))
+                )
 
         async with self.request.db.acquire() as conn:
             story = await conn.fetchrow(
-                select([stories]).where(stories.c.id == id))
+                select([stories]).where(stories.c.id == id)
+            )
 
-            if story is None or story.is_removed:
-                return web.Response(
-                    status=404,
-                    content_type="application/json",
-                    text=json.dumps(error(2003)))
+            if slug is not None:
+                topic = await conn.fetchrow(
+                    select([topics]).where(topics.c.slug == slug)
+                )
+            else:
+                topic = None
 
-            topic = await conn.fetchrow(
-                select([topics]).where(topics.c.id == story.topic_id))
+        if story is None or story.is_removed:
+            return web.Response(
+                status=404,
+                content_type="application/json",
+                text=json.dumps(error(2003))
+            )
 
-        # Check, if topic is present
-        if topic is None:
+        if slug is not None and (topic is None or not topic.is_public):
+            return web.Response(
+                status=404,
+                content_type="application/json",
+                text=json.dumps(error(2002))
+            )
+
+        # We cannot publish story, if topic is not specified
+        if is_approved is not None \
+                and is_approved \
+                and (slug is None or topic is None or story.topic_id is None):
             return web.Response(
                 status=400,
                 content_type="application/json",
-                text=json.dumps(error(2002)))
+                text=json.dumps(error(3002))
+            )
 
-        if content is not None or is_approved is not None:
-            query = update(stories).where(stories.c.id == id)
+        # PRE:
+        # is_approved = True
+
+        # POST:
+        # topic is not None OR story.topic_id is not None
+
+        if content is not None or slug is not None or is_approved is not None:
+            query = update(stories)\
+                .where(stories.c.id == id)\
+                .values(edited_date=pendulum.utcnow())
 
             if content is not None:
-                query = query.values(
-                    content=content,
-                    edited_date=pendulum.utcnow()
-                )
+                query = query.values(content=content)
+
+            if slug is not None:
+                query = query.values(topic_id=topic.id)
 
             if is_approved is not None:
                 if is_approved:
@@ -271,33 +278,44 @@ class StoryController(web.View):
                         is_approved=False,
                     )
 
-            async with self.request.db.acquire() as conn:
+            async with self.request.db.transaction() as conn:
                 await conn.execute(query)
 
+                if is_approved is not None:
+                    d = 1 if is_approved else -1
+
+                    tq = update(topics)\
+                        .values(stories_count=topics.c.stories_count + d)
+
+                    if topic is not None:
+                        tq.where(topics.c.id == topic.id)
+                    else:
+                        tq.where(topics.c.id == story.topic_id)
+
+                    await conn.execute(tq)
+                    await conn.execute(
+                        update(users)
+                            .where(users.c.id == story.author_id)
+                            .values(stories_count=users.c.stories_count + d)
+                    )
+
                 story = await conn.fetchrow(
-                    select([stories]).where(stories.c.id == id))
+                    select([stories]).where(stories.c.id == id)
+                )
 
         return web.Response(
-            status=201,
+            status=200,
             content_type="application/json",
-
-            # FIXME: MODEL: STORY
-            text=json.dumps(ok({
-                "id": identifier.to36(story.id),
-                "topic": {
-                    "slug": topic.slug,
-                    "title": topic.title,
-                    "description": topic.description,
-                    "icon": topic.icon,
-                    "stories_count": topic.stories_count
-                },
-                "content": story.content,
-                "likes_count": story.likes_count,
-                "comments_count": story.comments_count,
-                "submitted_date": story.submitted_date.isoformat(),
-                # "edited_date": story.edited_date.isoformat(),
-                "published_date": story.published_date.isoformat() if story.published_date is not None else None
-            }))
+            text=json.dumps(ok(renderer.story({
+                "id": story.stories_id,
+                "topic": None,
+                "content": story.stories_content,
+                "likes_count": story.stories_likes_count,
+                "comments_count": story.stories_comments_count,
+                "submitted_date": story.stories_submitted_date,
+                "edited_date": story.stories_edited_date,
+                "published_date": story.stories_published_date
+            })))
         )
 
     async def delete(self):
@@ -316,20 +334,23 @@ class StoryController(web.View):
             story = await conn.fetchrow(
                 select([stories]).where(stories.c.id == id))
 
-            if story is None or story.is_removed:
-                return web.Response(
-                    status=404,
-                    content_type="application/json",
-                    text=json.dumps(error(2003)))
-
-        query = update(stories)\
-            .where(stories.c.id == id)\
-            .values(is_removed=True)
+        if story is None or story.is_removed:
+            return web.Response(
+                status=404,
+                content_type="application/json",
+                text=json.dumps(error(2003))
+            )
 
         async with self.request.db.acquire() as conn:
-            await conn.execute(query)
+            await conn.execute(
+                update(stories)
+                    .where(stories.c.id == id)
+                    .values(is_removed=True)
+            )
+
             story = await conn.fetchrow(
-                select([stories]).where(stories.c.id == id))
+                select([stories]).where(stories.c.id == id)
+            )
 
         if story.is_removed:
             return web.Response(
@@ -364,25 +385,29 @@ class LikeController(web.View):
             return web.Response(
                 status=400,
                 content_type="application/json",
-                text=json.dumps(error(2003)))
+                text=json.dumps(error(2003))
+            )
 
         diff = 1 if state else -1
 
         async with self.request.db.acquire() as conn:
             story = await conn.fetchrow(
-                select([stories]).where(stories.c.id == id))
+                select([stories]).where(stories.c.id == id)
+            )
 
             if story is None or story.is_removed or not story.is_approved:
                 return web.Response(
                     status=404,
                     content_type="application/json",
-                    text=json.dumps(error(2003)))
+                    text=json.dumps(error(2003))
+                )
 
             like = await conn.fetchrow(
                 select([story_likes])
                     .where(story_likes.c.user_id == ANONYMOUS_USER_ID)
                     .where(story_likes.c.story_id == story.id)
-                    .order_by(story_likes.c.timestamp.desc()))
+                    .order_by(story_likes.c.timestamp.desc())
+            )
 
         if like is None or like.state != state:
             async with self.request.db.transaction() as conn:
@@ -396,26 +421,30 @@ class LikeController(web.View):
                 await conn.execute(
                     update(stories)
                         .where(stories.c.id == story.id)
-                        .values(likes_count=stories.c.likes_count + diff))
+                        .values(likes_count=stories.c.likes_count + diff)
+                )
 
                 await conn.execute(
                     update(users)
                         .where(users.c.id == ANONYMOUS_USER_ID)
                         .values(
-                        story_likes_count=users.c.story_likes_count + diff))
+                        story_likes_count=users.c.story_likes_count + diff)
+                )
 
             async with self.request.db.acquire() as conn:
                 like = await conn.fetchrow(
                     select([story_likes])
                         .where(story_likes.c.user_id == ANONYMOUS_USER_ID)
                         .where(story_likes.c.story_id == story.id)
-                        .order_by(story_likes.c.timestamp.desc()))
+                        .order_by(story_likes.c.timestamp.desc())
+                )
 
             if like is None:
                 return web.Response(
                     status=500,
                     content_type="application/json",
-                    text=json.dumps(error(1006)))
+                    text=json.dumps(error(1006))
+                )
 
         return web.Response(
             status=201,
@@ -431,7 +460,8 @@ class LikeController(web.View):
                 },
                 "state": like.state,
                 "timestamp": like.timestamp.isoformat()
-            })))
+            }))
+        )
 
 
 class CommentsController(web.View):
@@ -445,7 +475,8 @@ class CommentsController(web.View):
             return web.Response(
                 status=400,
                 content_type="application/json",
-                text=json.dumps(error(2003)))
+                text=json.dumps(error(2003))
+            )
 
         # TODO: WTF is this? Rewrite via a cte query with depth
         async with self.request.db.acquire() as conn:
@@ -453,7 +484,8 @@ class CommentsController(web.View):
                 select([
                     stories.c.is_approved,
                     stories.c.is_removed
-                ]).where(stories.c.id == id))
+                ]).where(stories.c.id == id)
+            )
 
             # Comments is not available, if story is not exists, removed or
             # not approved yet.
@@ -465,20 +497,23 @@ class CommentsController(web.View):
                     text=json.dumps(error(2003)))
 
             comments_ = await conn.fetch(
-                select(
-                    [comments, users.c.username.label("author_username")])
+                select([
+                    comments,
+                    users.c.username.label("author_username")
+                ])
                     .where(users.c.id == comments.c.author_id)
                     .where(comments.c.story_id == id)
-                    .order_by(comments.c.likes_count.desc()))
+                    .order_by(comments.c.submitted_date.desc())
+            )
 
         data = OrderedDict(
             [
-                (   # FIXME: MODEL: COMMENT
-                    identifier.to36(comment.id),
+                (
+                    comment.id,
                     {
-                        "id": identifier.to36(comment.id),
-                        "parent": None if comment.parent_id is None else {
-                            "id": identifier.to36(comment.parent_id),
+                        "id": comment.id,
+                        "parent": {
+                            "id": comment.parent_id,
                         },
                         "author": {
                             "id": comment.author_id,
@@ -488,19 +523,23 @@ class CommentsController(web.View):
                         "comments": [],
                         "likes_count": comment.likes_count,
                         "comments_count": comment.comments_count,
-                        "submitted_date": comment.submitted_date.isoformat(),
-                        "edited_date": comment.edited_date.isoformat() if comment.edited_date else None
+                        "submitted_date": comment.submitted_date,
+                        "edited_date": comment.edited_date
                     }
                 ) for comment in comments_]
         )
 
         for comment in data.values():
-            if comment["parent"] is not None:
+            if comment["parent"]["id"] is not None:
                 data[comment["parent"]["id"]]["comments"].append(comment)
 
         return web.Response(
             status=200,
             content_type="application/json",
             text=json.dumps(
-                ok(list(
-                    filter(lambda c: c["parent"] is None, data.values())))))
+                ok([renderer.comment(c)
+                    for c in filter(
+                        lambda c: c["parent"]["id"] is None, data.values()
+                    )])
+            )
+        )

@@ -26,6 +26,10 @@ routes = [
         "controller": api.topics.TopicController
     },
     {
+        "path": "/topics/{slug:[a-z]+}/unapproved",
+        "controller": api.topics.UnapprovedController
+    },
+    {
         "path": "/topics/{slug:[a-z]+}/latest",
         "controller": api.topics.LatestController
     },
