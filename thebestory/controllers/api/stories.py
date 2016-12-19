@@ -244,7 +244,7 @@ class StoryController(web.View):
         # We cannot publish story, if topic is not specified
         if is_approved is not None \
                 and is_approved \
-                and (slug is None or topic is None or story.topic_id is None):
+                and (topic is None and story.topic_id is None):
             return web.Response(
                 status=400,
                 content_type="application/json",
@@ -308,14 +308,14 @@ class StoryController(web.View):
             status=200,
             content_type="application/json",
             text=json.dumps(ok(renderer.story({
-                "id": story.stories_id,
+                "id": story.id,
                 "topic": None,
-                "content": story.stories_content,
-                "likes_count": story.stories_likes_count,
-                "comments_count": story.stories_comments_count,
-                "submitted_date": story.stories_submitted_date,
-                "edited_date": story.stories_edited_date,
-                "published_date": story.stories_published_date
+                "content": story.content,
+                "likes_count": story.likes_count,
+                "comments_count": story.comments_count,
+                "submitted_date": story.submitted_date,
+                "edited_date": story.edited_date,
+                "published_date": story.published_date
             })))
         )
 
