@@ -27,7 +27,14 @@ class CollectionController(web.View):
                             .where(topics.c.is_public == True)
                             .order_by(topics.c.slug.asc())
             ):
-                data.append(renderer.topic(topic))
+                data.append(renderer.topic({
+                    "id": topic.id,
+                    "slug": topic.slug,
+                    "title": topic.title,
+                    "icon": topic.icon,
+                    "description": topic.description,
+                    "stories_count": topic.stories_count
+                }))
 
         return web.Response(
             status=200,
@@ -65,7 +72,14 @@ class TopicController(web.View):
         return web.Response(
             status=200,
             content_type="application/json",
-            text=json.dumps(ok(renderer.topic(topic)))
+            text=json.dumps(ok(renderer.topic({
+                    "id": topic.id,
+                    "slug": topic.slug,
+                    "title": topic.title,
+                    "icon": topic.icon,
+                    "description": topic.description,
+                    "stories_count": topic.stories_count
+            })))
         )
 
 
