@@ -2,6 +2,8 @@
 The Bestory Project
 """
 
+from datetime import datetime
+
 import pendulum
 import sqlalchemy as sa
 
@@ -28,7 +30,7 @@ table = sa.Table(
     sa.Column("is_removed", sa.Boolean, default=False, nullable=False),
 
     sa.Column("submitted_date", db.types.DateTime,
-              default=pendulum.utcnow(),
+              default=lambda: datetime.utcnow().replace(tzinfo=pendulum.UTC),
               nullable=False),
     sa.Column("edited_date", db.types.DateTime, nullable=True),
 )

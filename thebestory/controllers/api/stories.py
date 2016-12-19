@@ -2,6 +2,7 @@
 The Bestory Project
 """
 
+import datetime
 import json
 from collections import OrderedDict
 
@@ -62,18 +63,18 @@ class CollectionController(web.View):
                 # FIXME: When asyncpgsa will replace nulls with default values
                 story_id = await conn.fetchval(insert(stories).values(
                     author_id=ANONYMOUS_USER_ID,
-                    topic_id=None,
                     content=content,
                     likes_count=0,
                     comments_count=0,
                     is_approved=False,
                     is_removed=False,
-                    submitted_date=pendulum.utcnow()
+                    submitted_date=datetime.datetime.utcnow().replace(tzinfo=pendulum.UTC)
                 ))
 
-                if story_id is None:
-                    raise ValueError
+            if story_id is None:
+                raise ValueError
 
+            async with self.request.db.acquire() as conn:
                 row = await conn.fetchrow(
                     select([
                         stories
@@ -83,8 +84,8 @@ class CollectionController(web.View):
                         .apply_labels()
                 )
 
-                if row is None:
-                    raise ValueError
+            if row is None:
+                raise ValueError
         except ValueError:
             return web.Response(
                 status=500,
@@ -259,7 +260,7 @@ class StoryController(web.View):
         if content is not None or slug is not None or is_approved is not None:
             query = update(stories)\
                 .where(stories.c.id == id)\
-                .values(edited_date=pendulum.utcnow())
+                .values(edited_date=datetime.datetime.utcnow().replace(tzinfo=pendulum.UTC))
 
             if content is not None:
                 query = query.values(content=content)
@@ -271,7 +272,7 @@ class StoryController(web.View):
                 if is_approved:
                     query = query.values(
                         is_approved=True,
-                        published_date=pendulum.utcnow()
+                        published_date=datetime.datetime.utcnow().replace(tzinfo=pendulum.UTC)
                     )
                 else:
                     query = query.values(
@@ -415,7 +416,7 @@ class LikeController(web.View):
                     user_id=ANONYMOUS_USER_ID,
                     story_id=story.id,
                     state=state,
-                    timestamp=pendulum.utcnow()
+                    timestamp=datetime.datetime.utcnow().replace(tzinfo=pendulum.UTC)
                 ))
 
                 await conn.execute(
