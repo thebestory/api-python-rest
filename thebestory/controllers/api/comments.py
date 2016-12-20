@@ -120,7 +120,7 @@ class CollectionController(web.View):
                 likes_count=0,
                 comments_count=0,
                 is_removed=False,
-                submitted_date=pendulum.utcnow()
+                submitted_date=datetime.utcnow().replace(tzinfo=pendulum.UTC)
             ))
 
             await conn.execute(
@@ -351,7 +351,7 @@ class CommentController(web.View):
             if content is not None:
                 query = query.values(
                     content=content,
-                    edited_date=pendulum.utcnow()
+                    edited_date=datetime.utcnow().replace(tzinfo=pendulum.UTC)
                 )
 
             async with self.request.db.acquire() as conn:
@@ -502,7 +502,7 @@ class LikeController(web.View):
                     user_id=ANONYMOUS_USER_ID,
                     comment_id=comment.id,
                     state=state,
-                    timestamp=pendulum.utcnow()
+                    timestamp=datetime.utcnow().replace(tzinfo=pendulum.UTC)
                 ))
 
                 await conn.execute(
