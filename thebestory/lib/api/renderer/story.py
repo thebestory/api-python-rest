@@ -14,6 +14,7 @@ def render(story):
             if story["topic"] is not None
             else None,
         "content": story["content"],
+        "is_liked": story.get("is_liked"),
         "likes_count": story["likes_count"],
         "comments_count": story["comments_count"],
         "submitted_date":

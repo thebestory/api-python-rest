@@ -100,6 +100,7 @@ class CollectionController(web.View):
             "id": row.stories_id,
             "topic": None,
             "content": row.stories_content,
+            "is_liked": False,  # trivia
             "likes_count": row.stories_likes_count,
             "comments_count": row.stories_comments_count,
             "submitted_date": row.stories_submitted_date,
@@ -140,6 +141,15 @@ class StoryController(web.View):
                     .apply_labels()
             )
 
+            like = await conn.fetchrow(
+                select([story_likes])
+                    .where(story_likes.c.user_id == ANONYMOUS_USER_ID)
+                    .where(story_likes.c.story_id == id)
+                    .order_by(story_likes.c.story_id)
+                    .order_by(story_likes.c.timestamp.desc())
+                    .distinct(story_likes.c.story_id)
+            )
+
         if row is None or row.stories_is_removed or not row.stories_is_approved:
             return web.Response(
                 status=404,
@@ -158,6 +168,7 @@ class StoryController(web.View):
                 "stories_count": row.topics_stories_count
             },
             "content": row.stories_content,
+            "is_liked": False if like is None else like.state,
             "likes_count": row.stories_likes_count,
             "comments_count": row.stories_comments_count,
             "submitted_date": row.stories_submitted_date,
@@ -226,6 +237,15 @@ class StoryController(web.View):
                 )
             else:
                 topic = None
+
+            like = await conn.fetchrow(
+                select([story_likes])
+                    .where(story_likes.c.user_id == ANONYMOUS_USER_ID)
+                    .where(story_likes.c.story_id == id)
+                    .order_by(story_likes.c.story_id)
+                    .order_by(story_likes.c.timestamp.desc())
+                    .distinct(story_likes.c.story_id)
+            )
 
         if story is None or story.is_removed:
             return web.Response(
@@ -311,6 +331,7 @@ class StoryController(web.View):
                 "id": story.id,
                 "topic": None,
                 "content": story.content,
+                "is_liked": False if like is None else like.state,
                 "likes_count": story.likes_count,
                 "comments_count": story.comments_count,
                 "submitted_date": story.submitted_date,

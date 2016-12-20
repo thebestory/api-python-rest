@@ -11,7 +11,13 @@ from sqlalchemy.sql.expression import func
 from thebestory.lib import listing
 from thebestory.lib.api import renderer
 from thebestory.lib.api.response import *
-from thebestory.models import stories, topics
+from thebestory.models import stories, topics, story_likes
+
+# User ID
+ANONYMOUS_USER_ID = 5
+
+# User ID
+THEBESTORY_USER_ID = 2
 
 
 class CollectionController(web.View):
@@ -142,6 +148,7 @@ class LatestController(web.View):
             )
 
         data = []
+        ids = {}
 
         query = select([
             stories,
@@ -172,7 +179,7 @@ class LatestController(web.View):
 
         async with self.request.db.acquire() as conn:
             for row in await conn.fetch(query):
-                data.append(renderer.story({
+                r = {
                     "id": row.stories_id,
                     "topic": {
                         "id": row.topics_id,
@@ -183,17 +190,32 @@ class LatestController(web.View):
                         "stories_count": row.topics_stories_count
                     },
                     "content": row.stories_content,
+                    "is_liked": False,
                     "likes_count": row.stories_likes_count,
                     "comments_count": row.stories_comments_count,
                     "submitted_date": row.stories_submitted_date,
                     "edited_date": row.stories_edited_date,
                     "published_date": row.stories_published_date
-                }))
+                }
+
+                data.append(r)
+                ids[row.stories_id] = r
+
+        query = select([story_likes]) \
+            .where(story_likes.c.user_id == ANONYMOUS_USER_ID) \
+            .where(story_likes.c.story_id.in_([k for k in ids.keys()])) \
+            .order_by(story_likes.c.story_id) \
+            .order_by(story_likes.c.timestamp.desc()) \
+            .distinct(story_likes.c.story_id)
+
+        async with self.request.db.acquire() as conn:
+            for row in await conn.fetch(query):
+                ids[row.story_id]["is_liked"] = row.state
 
         return web.Response(
             status=200,
             content_type="application/json",
-            text=json.dumps(ok(data))
+            text=json.dumps(ok([renderer.story(row) for row in data]))
         )
 
 
@@ -295,11 +317,15 @@ class TopController(web.View):
         if pivot:
             if direction == listing.Direction.BEFORE:
                 query = query.where(
-                    stories.c.published_date > pivot_story.published_date
+                    (stories.c.likes_count > pivot_story.likes_count)
+                    | ((stories.c.likes_count == pivot_story.likes_count) &
+                       (stories.c.published_date > pivot_story.published_date))
                 )
             elif direction == listing.Direction.AFTER:
                 query = query.where(
-                    stories.c.published_date < pivot_story.published_date
+                    (stories.c.likes_count < pivot_story.likes_count)
+                    | ((stories.c.likes_count == pivot_story.likes_count) &
+                       (stories.c.published_date < pivot_story.published_date))
                 )
 
         async with self.request.db.acquire() as conn:
@@ -369,6 +395,7 @@ class RandomController(web.View):
             )
 
         data = []
+        ids = {}
 
         query = select([
             stories,
@@ -388,7 +415,7 @@ class RandomController(web.View):
 
         async with self.request.db.acquire() as conn:
             for row in await conn.fetch(query):
-                data.append(renderer.story({
+                r = {
                     "id": row.stories_id,
                     "topic": {
                         "id": row.topics_id,
@@ -399,17 +426,32 @@ class RandomController(web.View):
                         "stories_count": row.topics_stories_count
                     },
                     "content": row.stories_content,
+                    "is_liked": False,
                     "likes_count": row.stories_likes_count,
                     "comments_count": row.stories_comments_count,
                     "submitted_date": row.stories_submitted_date,
                     "edited_date": row.stories_edited_date,
                     "published_date": row.stories_published_date
-                }))
+                }
+
+                data.append(r)
+                ids[row.stories_id] = r
+
+        query = select([story_likes]) \
+            .where(story_likes.c.user_id == ANONYMOUS_USER_ID) \
+            .where(story_likes.c.story_id.in_([k for k in ids.keys()])) \
+            .order_by(story_likes.c.story_id) \
+            .order_by(story_likes.c.timestamp.desc()) \
+            .distinct(story_likes.c.story_id)
+
+        async with self.request.db.acquire() as conn:
+            for row in await conn.fetch(query):
+                ids[row.story_id]["is_liked"] = row.state
 
         return web.Response(
             status=200,
             content_type="application/json",
-            text=json.dumps(ok(data))
+            text=json.dumps(ok([renderer.story(row) for row in data]))
         )
 
 
@@ -499,6 +541,7 @@ class UnapprovedController(web.View):
                     "id": row.stories_id,
                     "topic": None,
                     "content": row.stories_content,
+                    "is_liked": None,  # we do not provide this info for mods
                     "likes_count": row.stories_likes_count,
                     "comments_count": row.stories_comments_count,
                     "submitted_date": row.stories_submitted_date,
