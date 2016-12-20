@@ -295,6 +295,7 @@ class TopController(web.View):
             )
 
         data = []
+        ids = {}
 
         query = select([
             stories,
@@ -330,7 +331,7 @@ class TopController(web.View):
 
         async with self.request.db.acquire() as conn:
             for row in await conn.fetch(query):
-                data.append(renderer.story({
+                r = {
                     "id": row.stories_id,
                     "topic": {
                         "id": row.topics_id,
@@ -341,17 +342,32 @@ class TopController(web.View):
                         "stories_count": row.topics_stories_count
                     },
                     "content": row.stories_content,
+                    "is_liked": False,
                     "likes_count": row.stories_likes_count,
                     "comments_count": row.stories_comments_count,
                     "submitted_date": row.stories_submitted_date,
                     "edited_date": row.stories_edited_date,
                     "published_date": row.stories_published_date
-                }))
+                }
+
+                data.append(r)
+                ids[row.stories_id] = r
+
+        query = select([story_likes]) \
+            .where(story_likes.c.user_id == ANONYMOUS_USER_ID) \
+            .where(story_likes.c.story_id.in_([k for k in ids.keys()])) \
+            .order_by(story_likes.c.story_id) \
+            .order_by(story_likes.c.timestamp.desc()) \
+            .distinct(story_likes.c.story_id)
+
+        async with self.request.db.acquire() as conn:
+            for row in await conn.fetch(query):
+                ids[row.story_id]["is_liked"] = row.state
 
         return web.Response(
             status=200,
             content_type="application/json",
-            text=json.dumps(ok(data))
+            text=json.dumps(ok([renderer.story(row) for row in data]))
         )
 
 
