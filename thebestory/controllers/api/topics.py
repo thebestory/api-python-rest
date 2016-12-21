@@ -223,17 +223,22 @@ class HotController(web.View):
     # 25 stories per page
     listing = listing.Listing(1, 100, 25)
 
-    @staticmethod
-    async def get():
+    async def get(self):
         """
         Returns the list of hot stories in topic.
         Listings are supported.
         """
-        return web.Response(
-            status=200,
-            content_type="application/json",
-            text=json.dumps(error(4001))
-        )
+        try:
+            slug = self.request.match_info["slug"]
+        except KeyError:
+            return web.Response(
+                status=400,
+                content_type="application/json",
+                text=json.dumps(error(2002))
+            )
+
+        from aiohttp.web_exceptions import HTTPMovedPermanently
+        raise HTTPMovedPermanently("/topics/" + slug + "/top")
 
 
 class TopController(web.View):
