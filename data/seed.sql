@@ -19,38 +19,38 @@ INSERT INTO topics (slug, title, description, icon, is_public) VALUES ('all', 'A
                                                                        FALSE);
 
 INSERT INTO topics (slug, title, description, icon) VALUES ('weird', 'Weird',
-                                                            'We all are weird, but there might be someone whose story will make your eyes pop out. Check it out right now!',
-                                                            '');
+                                                            'All of us are weird, but there might be someone, whose story will make your eyes pop out. Check it out right now!',
+                                                            '9406QtVe637');
 INSERT INTO topics (slug, title, description, icon) VALUES ('love', 'Love',
-                                                            'Are you in doubt whether love exists or not? We assure you it does, all the evidence in the touching stories by our members!',
-                                                            '');
+                                                            'Do you have doubts about love existence? We can assure you it does exist. Check out the evidence of it in the touching stories of our members!',
+                                                            '8utqsEYq596');
 INSERT INTO topics (slug, title, description, icon) VALUES ('funny', 'Funny',
-                                                            'We all know we are fond of laughing. So, why would we restrain ourselves from it? Enjoy the hilarious moments of lives of our subscribers.',
-                                                            '');
+                                                            'We all know that everyone loves to laugh. So, why would you restrain yourselves from it? Enjoy hilarious moments from our subscribers lives.',
+                                                            'c407w1H03A0');
 INSERT INTO topics (slug, title, description, icon) VALUES ('intimate', 'Intimate',
-                                                            'They say sex brings people together. Now it’s time to check this and read a couple of hot stories from our members.',
-                                                            '');
+                                                            'Some say sex brings people together. Now it''s time to test this statement and read a couple of hot stories from our members.',
+                                                            'cWiepIBqmtJ');
 INSERT INTO topics (slug, title, description, icon) VALUES ('happiness', 'Happiness',
-                                                            'Here you will see what makes us try again and again, what makes our lives meaningful. The moments when we are infinitely happy.',
-                                                            '');
+                                                            'Here you will see what (pushes us forward) and makes us try again. What makes our life meaningful. The moments when we are endlessly happy.',
+                                                            '9ilbmJGoCFr');
 INSERT INTO topics (slug, title, description, icon) VALUES ('lifehack', 'Lifehack',
-                                                            'We guess you couldn’t even imagine that there is such an easy and satisfying way to do it. Here, our members will show you!',
-                                                            '');
+                                                            'We guess you could not even imagine that there is (an easier approach to some problems)such an easy and satisfying way to do it. Here our members will share it with you!',
+                                                            'c00fM2X0Iw1');
 INSERT INTO topics (slug, title, description, icon) VALUES ('gooddeeds', 'Good deeds',
-                                                            'Read the stories of our members and make yourself sure that our world is full of people with hearts of gold!',
-                                                            '');
+                                                            'There are tons of great people in the world around us, even if it is hard to see. Read some of these stories and restore your perhaps lost faith in humanity.',
+                                                            'd7wmKsG0iQe');
 INSERT INTO topics (slug, title, description, icon) VALUES ('dreams', 'Dreams',
-                                                            'What can you see, feel or make while you are asleep? Anything you have ever thought of and even more. Find out what others have dreamt of!',
-                                                            '');
+                                                            'What can you see, feel or do while you are asleep? Anything you have ever thought about and beyond that. Find out what others dreams are like!',
+                                                            '9kBiF8KM3L2');
 INSERT INTO topics (slug, title, description, icon) VALUES ('scary', 'Scary',
-                                                            'Sometimes our lives aren’t as good as we’d like to. But there are certain moments when we just get petrified. Read the stories about it, if you dare.',
-                                                            '');
+                                                            'Sometimes our life isn’t as good as we''d like it to be. Moreover, there are certain moments when we are petrified. Read these stories about such situations, if you dare.',
+                                                            'c407w1K03A0');
 INSERT INTO topics (slug, title, description, icon) VALUES ('sad', 'Sad',
-                                                            'Not available',
-                                                            '');
+                                                            'If you feel down or it is too early for you to move on, check our users stories who are in the same boat with you',
+                                                            'c407w1H03M0');
 INSERT INTO topics (slug, title, description, icon) VALUES ('daydreams', 'Daydreams',
-                                                            'Not available',
-                                                            '');
+                                                            'You probably need just a little push to become greater than you are now. Maybe some of these stories will help you to pursue your own dreams.',
+                                                            'c6ZblE$m3o5');
 
 ---
 --- STORIES
@@ -252,7 +252,7 @@ VALUES ((SELECT users.id
          WHERE users.username = 'thebestory'),
         (SELECT topics.id
          FROM topics
-         WHERE topics.slug = 'good-deeds'),
+         WHERE topics.slug = 'gooddeeds'),
         'I''m a bartender. If I see that some queer fish put the moves to a pretty girl and tries to liquor her then I don''t add alcohol to her cocktails at all, so that she wouldn''t go anywhere with the guy and nothing bad happens.',
         TRUE, '2016-12-02 01:04:20.752000 +03:00', '2016-12-02 01:04:23.407000 +03:00');
 
@@ -373,7 +373,7 @@ VALUES ((SELECT users.id
 -- intimate
 -- happiness
 -- lifehack
--- good-deeds
+-- gooddeeds
 -- dreams
 -- scary
 -- sad
@@ -406,3 +406,14 @@ SET stories_count = (
   FROM stories
   WHERE stories.topic_id = topics.id
 );
+
+UPDATE stories
+SET submitted_date = TIMESTAMP WITH TIME ZONE '2016-12-01 00:00:00.000000 +00:00' + random() * (
+    TIMESTAMP WITH TIME ZONE '2016-12-21 08:30:00.000000 +00:00' -
+    TIMESTAMP WITH TIME ZONE '2016-12-01 00:00:00.000000 +00:00');
+
+UPDATE stories
+SET published_date = submitted_date;
+
+UPDATE stories
+SET edited_date = NULL;
