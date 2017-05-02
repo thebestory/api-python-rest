@@ -2,128 +2,62 @@
 The Bestory Project
 """
 
-import asyncio
-import asyncpgsa
-from aiohttp import web
+from sanic import Sanic
 
 from thebestory import config
 
 
-class Application:
-    def __init__(self):
-        self._loop = asyncio.get_event_loop()
-        self._app = web.Application(loop=self._loop)
+app = Sanic()
 
-        self._db_pool = None
 
-        self._controllers = {}
+async def invoke_listeners(app, loop, listeners):
+    for listener in listeners:
+        await listener(app, loop)
 
-        self._config()
 
-    async def _on_startup(self):
-        """Boots main parts of application"""
-        self._db_pool = await asyncpgsa.create_pool(
-            host=config.db.HOST,
-            port=config.db.PORT,
-            user=config.db.USER,
-            password=config.db.PASSWORD,
-            database=config.db.DATABASE,
-            loop=self._loop,
-            min_size=config.db.POOL_MIN_SIZE,
-            max_size=config.db.POOL_MAX_SIZE,
+def add_routes(app):
+    for endpoint in config.endpoints.root:
+        app.add_route(
+            endpoint['path'],
+            endpoint['handler'],
+            endpoint.get('methods', ['GET'])
         )
 
-    async def _on_shutdown(self):
-        pass
 
-    async def _on_cleanup(self):
-        pass
-
-    def _config(self):
-        """Configures application"""
-        self._config_patches()
-        self._config_mw()
-        self._config_routes()
-
-    def _config_mw(self):
-        """Adds middlewares to the application instance"""
-
-        async def middleware_db(app, handler):
-            async def bind_db(request: web.Request):
-                request.db = self.db
-                return await handler(request)
-
-            return bind_db
-
-        self._app.middlewares.extend(config.mw)
-        self._app.middlewares.append(middleware_db)
-
-    def _config_routes(self):
-        """Adds routes to the application instance"""
-
-        for route in config.routes:
-            if route.get("method"):
-                if route["controller"] not in self._controllers:
-                    self._controllers[route["controller"]] = route["controller"]()
-
-                action = getattr(
-                    self._controllers[route["controller"]],
-                    route["action"],
-                )
-
-                self._app.router.add_route(
-                    route["method"],
-                    route["path"],
-                    action,
-                )
-            else:
-                self._app.router.add_route(
-                    "*",
-                    route["path"],
-                    route["controller"]
-                )
-
-    @staticmethod
-    def _config_patches():
-        """Adds patches to some parts of applications"""
-        from thebestory.lib import patch
-        from asyncpgsa.connection import SAConnection
-
-        SAConnection.fetchrow = patch.asyncpgsa.fetchrow
-
-    @property
-    def db(self) -> asyncpgsa.pool.SAPool:
-        return self._db_pool
-
-    def run(self):
-        """Runs the server"""
-
-        handler = self._app.make_handler()
-        server = self._loop.run_until_complete(
-            self._loop.create_server(
-                handler,
-                config.app.HOST,
-                config.app.PORT,
-                ssl=config.app.SSL
-            )
-        )
-
-        self._loop.run_until_complete(self._on_startup())
-
-        print("Serving on", server.sockets[0].getsockname(), "...")
-
-        try:
-            self._loop.run_forever()
-        except KeyboardInterrupt:
-            print("Stopping server", "...")
-        finally:
-            server.close()
-            self._loop.run_until_complete(server.wait_closed())
-            self._loop.run_until_complete(self._on_shutdown())
-            self._loop.run_until_complete(
-                handler.finish_connections(config.app.FINISH_TIMEOUT))
-            self._loop.run_until_complete(self._on_cleanup())
-            self._loop.close()
+@app.listener('before_server_start')
+async def before_start(app, loop):
+    invoke_listeners(app, loop, config.listeners.before_start)
 
 
-app = Application()
+@app.listener('after_server_start')
+async def after_start(app, loop):
+    invoke_listeners(app, loop, config.listeners.after_start)
+
+
+@app.listener('before_server_stop')
+async def before_stop(app, loop):
+    invoke_listeners(app, loop, config.listeners.before_stop)
+
+
+@app.listener('after_server_stop')
+async def after_stop(app, loop):
+    invoke_listeners(app, loop, config.listeners.after_stop)
+
+
+def main(app):
+    add_routes(app)
+
+
+main(app)
+
+
+if __name__ == '__main__':
+    app.run(
+        host=config.app.HOST,
+        port=config.app.PORT,
+        debug=config.app.DEBUG,
+        ssl=config.app.SSL,
+        sock=config.app.SOCK,
+        workers=config.app.WORKERS,
+        loop=config.app.LOOP
+    )
