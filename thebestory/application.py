@@ -2,6 +2,9 @@
 The Bestory Project
 """
 
+import os
+import urllib.parse
+
 from sanic import Sanic
 
 from thebestory import config
@@ -13,6 +16,29 @@ app = Sanic()
 async def invoke_listeners(app, loop, listeners):
     for listener in listeners:
         await listener(app, loop)
+
+
+def setup_env(app):
+    host = os.environ.get("HOST")
+    port = os.environ.get("PORT")
+    db = os.environ.get("DATABASE_URL")
+
+    if host is not None:
+        config.app.HOST = host
+
+    if port is not None:
+        config.app.PORT = port
+
+    if db is None:
+        raise ValueError("Database URL must be provided by the environment")
+
+    db = urllib.parse.urlparse(db)
+
+    config.db.HOST = db.hostname
+    config.db.PORT = db.port
+    config.db.USER = db.username
+    config.db.PASSWORD = db.password
+    config.db.DATABASE = db.path[1:]
 
 
 def add_routes(app):
@@ -45,6 +71,7 @@ async def after_stop(app, loop):
 
 
 def main(app):
+    setup_env(app)
     add_routes(app)
 
 
