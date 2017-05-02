@@ -44,8 +44,8 @@ def setup_env(app):
 def add_routes(app):
     for endpoint in config.endpoints.root:
         app.add_route(
-            endpoint['path'],
             endpoint['handler'],
+            endpoint['path'],
             endpoint.get('methods', ['GET'])
         )
 
