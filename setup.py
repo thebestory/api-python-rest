@@ -18,7 +18,7 @@ tests_requires = content('requirements-test.txt', splitlines=True)
 setup(
     name='thebestory',
     description='The Bestory Magic-Powered Server',
-    version='2016.11.0',
+    version='2017.5.0',
     url='thebestory.com',
 
     author='The Bestory Team',
@@ -41,6 +41,7 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3 :: Only',
     ),
 )

@@ -1,5 +1,4 @@
-aiohttp==1.2.0
-asyncpg==0.7.0
-asyncpgsa==0.7.0
-pendulum==0.7.0
-sqlalchemy==1.1.4
+sanic
+asyncpg
+pendulum
+pysnowflake
