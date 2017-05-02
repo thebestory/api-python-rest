@@ -36,7 +36,7 @@ sessions = [
         'methods': ['POST']
     },
     {
-        'path': '/sessions/<id:[0-9]+>',
+        'path': '/sessions/<id:int>',
         'handler': controllers.sessions.show,
         'methods': ['GET']
     },
@@ -78,22 +78,22 @@ topics = [
 
 comments = [
     {
-        'path': '/comments/<id:[0-9]+>',
+        'path': '/comments/<id:int>',
         'handler': controllers.comments.show,
         'methods': ['GET']
     },
     {
-        'path': '/comments/<id:[0-9]+>',
+        'path': '/comments/<id:int>',
         'handler': controllers.comments.create,
         'methods': ['POST']
     },
     {
-        'path': '/comments/<id:[0-9]+>',
+        'path': '/comments/<id:int>',
         'handler': controllers.comments.update,
         'methods': ['PATCH', 'PUT']
     },
     {
-        'path': '/comments/<id:[0-9]+>',
+        'path': '/comments/<id:int>',
         'handler': controllers.comments.delete,
         'methods': ['DELETE']
     },
@@ -101,17 +101,17 @@ comments = [
 
 reactions = [
     {
-        'path': '/reactions/<id:[0-9]+>',
+        'path': '/reactions/<id:int>',
         'handler': controllers.reactions.show,
         'methods': ['GET']
     },
     {
-        'path': '/reactions/<id:[0-9]+>',
+        'path': '/reactions/<id:int>',
         'handler': controllers.reactions.create,
         'methods': ['POST', 'PATCH', 'PUT']
     },
     {
-        'path': '/reactions/<id:[0-9]+>',
+        'path': '/reactions/<id:int>',
         'handler': controllers.reactions.delete,
         'methods': ['DELETE']
     },
@@ -124,17 +124,17 @@ stories = [
         'methods': ['DELETE']
     },
     {
-        'path': '/stories/<id:[0-9]+>',
+        'path': '/stories/<id:int>',
         'handler': controllers.stories.show,
         'methods': ['GET']
     },
     {
-        'path': '/stories/<id:[0-9]+>',
+        'path': '/stories/<id:int>',
         'handler': controllers.stories.update,
         'methods': ['PATCH', 'PUT']
     },
     {
-        'path': '/stories/<id:[0-9]+>',
+        'path': '/stories/<id:int>',
         'handler': controllers.stories.delete,
         'methods': ['DELETE']
     },

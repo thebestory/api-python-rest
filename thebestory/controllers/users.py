@@ -9,9 +9,9 @@ def create(request):
     return json({'hello': 'world'})
 
 
-def show(request):
+def show(request, username):
     return json({'hello': 'world'})
 
 
-def update(request):
+def update(request, username):
     return json({'hello': 'world'})

@@ -13,13 +13,13 @@ def create(request):
     return json({'hello': 'world'})
 
 
-def show(request):
+def show(request, slug):
     return json({'hello': 'world'})
 
 
-def update(request):
+def update(request, slug):
     return json({'hello': 'world'})
 
 
-def delete(request):
+def delete(request, slug):
     return json({'hello': 'world'})

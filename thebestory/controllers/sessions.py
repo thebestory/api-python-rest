@@ -13,7 +13,7 @@ def create(request):
     return json({'hello': 'world'})
 
 
-def show(request):
+def show(request, id):
     return json({'hello': 'world'})
 
 
