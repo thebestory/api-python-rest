@@ -52,22 +52,22 @@ def add_routes(app):
 
 @app.listener('before_server_start')
 async def before_start(app, loop):
-    invoke_listeners(app, loop, config.listeners.before_start)
+    await invoke_listeners(app, loop, config.listeners.before_start)
 
 
 @app.listener('after_server_start')
 async def after_start(app, loop):
-    invoke_listeners(app, loop, config.listeners.after_start)
+    await invoke_listeners(app, loop, config.listeners.after_start)
 
 
 @app.listener('before_server_stop')
 async def before_stop(app, loop):
-    invoke_listeners(app, loop, config.listeners.before_stop)
+    await invoke_listeners(app, loop, config.listeners.before_stop)
 
 
 @app.listener('after_server_stop')
 async def after_stop(app, loop):
-    invoke_listeners(app, loop, config.listeners.after_stop)
+    await invoke_listeners(app, loop, config.listeners.after_stop)
 
 
 def main(app):
