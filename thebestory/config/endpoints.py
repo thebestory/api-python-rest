@@ -74,46 +74,27 @@ topics = [
         'handler': controllers.topics.delete,
         'methods': ['DELETE']
     },
-]
 
-comments = [
+    # stories
     {
-        'path': '/comments/<id:int>',
-        'handler': controllers.comments.show,
+        'path': '/topics/<slug:[a-z]+>/latest',
+        'handler': controllers.topics.lists.latest,
         'methods': ['GET']
     },
     {
-        'path': '/comments/<id:int>',
-        'handler': controllers.comments.create,
-        'methods': ['POST']
-    },
-    {
-        'path': '/comments/<id:int>',
-        'handler': controllers.comments.update,
-        'methods': ['PATCH', 'PUT']
-    },
-    {
-        'path': '/comments/<id:int>',
-        'handler': controllers.comments.delete,
-        'methods': ['DELETE']
-    },
-]
-
-reactions = [
-    {
-        'path': '/reactions/<id:int>',
-        'handler': controllers.reactions.show,
+        'path': '/topics/<slug:[a-z]+>/hot',
+        'handler': controllers.topics.lists.hot,
         'methods': ['GET']
     },
     {
-        'path': '/reactions/<id:int>',
-        'handler': controllers.reactions.create,
-        'methods': ['POST', 'PATCH', 'PUT']
+        'path': '/topics/<slug:[a-z]+>/top',
+        'handler': controllers.topics.lists.top,
+        'methods': ['GET']
     },
     {
-        'path': '/reactions/<id:int>',
-        'handler': controllers.reactions.delete,
-        'methods': ['DELETE']
+        'path': '/topics/<slug:[a-z]+>/random',
+        'handler': controllers.topics.lists.random,
+        'methods': ['GET']
     },
 ]
 
@@ -121,7 +102,7 @@ stories = [
     {
         'path': '/stories',
         'handler': controllers.stories.create,
-        'methods': ['DELETE']
+        'methods': ['POST']
     },
     {
         'path': '/stories/<id:int>',
@@ -138,6 +119,72 @@ stories = [
         'handler': controllers.stories.delete,
         'methods': ['DELETE']
     },
+
+    # story comments
+    {
+        'path': '/stories/<story_id:int>/comments',
+        'handler': controllers.stories.comments.index,
+        'methods': ['GET']
+    },
+    {
+        'path': '/stories/<story_id:int>/comments',
+        'handler': controllers.stories.comments.create,
+        'methods': ['POST']
+    },
+    {
+        'path': '/stories/<story_id:int>/comments/<id:int>',
+        'handler': controllers.stories.comments.show,
+        'methods': ['GET']
+    },
+    {
+        'path': '/stories/<story_id:int>/comments/<id:int>',
+        'handler': controllers.stories.comments.create,
+        'methods': ['POST']
+    },
+    {
+        'path': '/stories/<story_id:int>/comments/<id:int>',
+        'handler': controllers.stories.comments.update,
+        'methods': ['PATCH', 'PUT']
+    },
+    {
+        'path': '/stories/<story_id:int>/comments/<id:int>',
+        'handler': controllers.stories.comments.delete,
+        'methods': ['DELETE']
+    },
+
+    # story likes
+    {
+        'path': '/stories/<story_id:int>/likes',
+        'handler': controllers.stories.likes.show,
+        'methods': ['GET']
+    },
+    {
+        'path': '/stories/<story_id:int>/likes',
+        'handler': controllers.stories.likes.create,
+        'methods': ['POST', 'PATCH', 'PUT']
+    },
+    {
+        'path': '/stories/<story_id:int>/likes',
+        'handler': controllers.stories.likes.delete,
+        'methods': ['DELETE']
+    },
+
+    # story comment likes
+    {
+        'path': '/stories/<story_id:int>/comments/<comment_id:int>/likes',
+        'handler': controllers.stories.comments.likes.show,
+        'methods': ['GET']
+    },
+    {
+        'path': '/stories/<story_id:int>/comments/<comment_id:int>/likes',
+        'handler': controllers.stories.comments.likes.create,
+        'methods': ['POST', 'PATCH', 'PUT']
+    },
+    {
+        'path': '/stories/<story_id:int>/comments/<comment_id:int>/likes',
+        'handler': controllers.stories.comments.likes.delete,
+        'methods': ['DELETE']
+    },
 ]
 
-root = users + sessions + topics + comments + reactions + stories
+root = users + sessions + topics + stories

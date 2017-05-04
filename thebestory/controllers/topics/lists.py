@@ -5,13 +5,17 @@ The Bestory Project
 from sanic.response import json
 
 
-def show(request, id):
+def latest(request, slug):
     return json({'hello': 'world'})
 
 
-def create(request, id):
+def hot(request, slug):
     return json({'hello': 'world'})
 
 
-def delete(request, id):
+def top(request, slug):
+    return json({'hello': 'world'})
+
+
+def random(request, slug):
     return json({'hello': 'world'})
