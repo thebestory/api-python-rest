@@ -2,17 +2,6 @@
 The Bestory Project
 """
 
-WARNING = {
-    # Object of action warings
-    2001: "Unknown user",
-    2002: "Unknown topic",
-    2003: "Unknown story",
-    2004: "Unknown comment",
-
-    # Listing and method limits warnings
-    3001: "Incorrect limit",
-}
-
 ERROR = {
     # API errors
     1001: "Endpoint not found",

@@ -4,11 +4,10 @@ The Bestory Project
 
 from collections import OrderedDict
 
-from .code import ERROR, WARNING
+from .code import ERROR
 
 __all__ = [
     "ok",
-    "warning",
     "error"
 ]
 
@@ -16,17 +15,6 @@ __all__ = [
 def ok(data):
     return OrderedDict([
         ("status", "ok"),
-        ("data", data)
-    ])
-
-
-def warning(code, data):
-    return OrderedDict([
-        ("status", "warning"),
-        ("warning", OrderedDict(
-            code=code,
-            message=WARNING[code]
-        )),
         ("data", data)
     ])
 
