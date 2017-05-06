@@ -3,9 +3,7 @@ The Bestory Project
 """
 
 from enum import IntEnum
-from typing import Optional, Union, Tuple
-
-from . import identifier
+from typing import Optional, Tuple
 
 
 class Direction(IntEnum):
@@ -42,23 +40,23 @@ class Listing:
         if limit is None:
             return self._default_limit
 
-        return max(self._min_limit, min(self._max_limit, int(limit)))
+        return max(self._min_limit, min(self._max_limit, limit))
 
     @staticmethod
-    def validate_id(id: Union[int, str]):
+    def validate_id(_id: int) -> Optional[int]:
         """
-        Returns ID as int value.
+        Returns validated ID.
         """
-        if isinstance(id, str):
-            id = identifier.from36(id)
+        if 0 <= _id:
+            return _id
 
-        return id
+        return None
 
     def validate(self,
-                 before: Union[int, str, None] = None,
-                 after: Union[int, str, None] = None,
-                 limit: Union[int, str, None] = None
-                 ) -> Tuple[Optional[int], int, Optional[Direction]]:
+                 before: Optional[int]=None,
+                 after: Optional[int]=None,
+                 limit: Optional[int]=None
+                 ) -> Tuple[Optional[int], int, Direction]:
         """
         Returns a ID of thing, from  which to search, and the correct
         value of limit. If neither of `before` and `after` is

@@ -25,35 +25,35 @@ sequence_number_mask = -1 ^ (-1 << sequence_number_bits)
 
 def timestamp_of_snowflake(snowflake: int) -> int:
     """
-    Get timestamp in ms from your config epoch from any Snowflake ID
+    Get timestamp in ms from your config epoch from any Snowflake ID.
     """
     return snowflake >> timestamp_shift
 
 
 def real_timestamp_of_snowflake(snowflake: int) -> int:
     """
-    Get timestamp in ms from computer epoch - January 1, 1970, Midnight
+    Get timestamp in ms from computer epoch - Midnight January 1, 1970.
     """
     return timestamp_of_snowflake(snowflake) + config.snowflake.EPOCH
 
 
 def machine_id_of_snowflake(snowflake: int) -> int:
     """
-    Get Machine ID from any Snowflake ID
+    Get Machine ID from any Snowflake ID.
     """
     return (snowflake & machine_id_mask) >> machine_id_shift
 
 
 def sequence_number_of_snowflake(snowflake: int) -> int:
     """
-    Get Sequence Number from any Snowflake ID
+    Get Sequence Number from any Snowflake ID.
     """
     return snowflake & sequence_number_mask
 
 
 def first_snowflake_for_timestamp(timestamp: int, machine_id: int=0) -> int:
     """
-    First Snowflake ID for timestamp
+    First Snowflake ID for timestamp. Machine ID can also be specified.
     """
     return (
         ((timestamp - config.snowflake.EPOCH) << timestamp_shift) |
