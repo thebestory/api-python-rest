@@ -43,7 +43,7 @@ CREATE TABLE comments (
   edited_date     TIMESTAMP WITH TIME ZONE
 );
 
-CREATE TABLE reactions (
+CREATE TABLE likes (
   user_id      BIGINT                                 NOT NULL,
   object_id    BIGINT                                 NOT NULL,
   valid        BOOLEAN DEFAULT TRUE                   NOT NULL,
