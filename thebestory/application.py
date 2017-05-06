@@ -22,6 +22,7 @@ def setup_env(app):
     host = os.environ.get("HOST")
     port = os.environ.get("PORT")
     db = os.environ.get("DATABASE_URL")
+    machine_id = os.environ.get("MACHINE_ID")
 
     if host is not None:
         config.app.HOST = host
@@ -31,6 +32,11 @@ def setup_env(app):
 
     if db is None:
         raise ValueError("Database URL must be provided by the environment")
+
+    if machine_id is None:
+        raise ValueError("Machine ID must be provided by the environment")
+
+    config.snowflake.MACHINE_ID = machine_id
 
     db = urllib.parse.urlparse(db)
 

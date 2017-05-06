@@ -8,4 +8,5 @@ from thebestory.config import (
     endpoints,
     listeners,
     middleware,
+    snowflake
 )
