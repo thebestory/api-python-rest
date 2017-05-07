@@ -8,7 +8,8 @@ def render(topic):
         "id": topic["id"],
         "slug": topic["slug"],
         "title": topic["title"],
-        "icon": topic["icon"],
         "description": topic["description"],
-        "stories_count": topic["stories_count"]
+        "icon": topic["icon"],
+        "stories_count": topic["stories_count"],
+        "is_active": topic["is_active"]
     }
