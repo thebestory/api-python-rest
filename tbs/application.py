@@ -2,9 +2,11 @@
 The Bestory Project
 """
 
+import functools
+
 from sanic import Sanic
 
-from tbs import config
+from tbs import config, controllers
 
 
 app = Sanic()
@@ -12,13 +14,16 @@ app = Sanic()
 
 async def invoke_listeners(app, loop, listeners):
     for listener in listeners:
-        await listener(app, loop)
+        await functools.reduce(getattr, listener.split('.'))(app, loop)
 
 
 def add_routes(app):
     for endpoint in config.endpoints.root:
         app.add_route(
-            endpoint['handler'],
+            functools.reduce(
+                getattr,
+                [controllers] + endpoint['handler'].split('.')
+            ),
             endpoint['path'],
             endpoint.get('methods', ['GET'])
         )

@@ -4,13 +4,14 @@ The Bestory Project
 
 import asyncpg
 
+from tbs import config
+
 
 pool: asyncpg.pool.Pool
 
 
 async def before_start_listener(app, loop):
     global pool
-    from tbs import config
 
     pool = await asyncpg.create_pool(
         host=config.db.HOST,
