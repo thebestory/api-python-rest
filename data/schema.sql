@@ -2,7 +2,7 @@
 -- TABLES
 --
 
-CREATE TABLE ids (
+CREATE TABLE snowflakes (
   id                  BIGINT                                 NOT NULL,
   type                CHARACTER VARYING(32)                  NOT NULL
 );
@@ -70,48 +70,48 @@ CREATE TABLE stories (
 --- PKs
 ---
 
-ALTER TABLE ONLY ids
-  ADD CONSTRAINT ids_pkey      PRIMARY KEY (id);
+ALTER TABLE ONLY snowflakes
+  ADD CONSTRAINT snowflakes_pkey PRIMARY KEY (id);
 
 ALTER TABLE ONLY users
-  ADD CONSTRAINT users_pkey    PRIMARY KEY (id);
+  ADD CONSTRAINT users_pkey      PRIMARY KEY (id);
 
 ALTER TABLE ONLY topics
-  ADD CONSTRAINT topics_pkey   PRIMARY KEY (id);
+  ADD CONSTRAINT topics_pkey     PRIMARY KEY (id);
 
 ALTER TABLE ONLY comments
-  ADD CONSTRAINT comments_pkey PRIMARY KEY (id);
+  ADD CONSTRAINT comments_pkey   PRIMARY KEY (id);
 
 ALTER TABLE ONLY likes
-  ADD CONSTRAINT likes_pkey    PRIMARY KEY (id);
+  ADD CONSTRAINT likes_pkey      PRIMARY KEY (id);
 
 ALTER TABLE ONLY stories
-  ADD CONSTRAINT stories_pkey  PRIMARY KEY (id);
+  ADD CONSTRAINT stories_pkey    PRIMARY KEY (id);
 
 ---
 --- INDEXES
 ---
 
-CREATE INDEX        ids_type_index
-  ON ids      USING BTREE (type);
+CREATE        INDEX snowflakes_type_index
+  ON snowflakes USING BTREE (type);
 
 CREATE UNIQUE INDEX users_username_uindex
-  ON users    USING BTREE (username);
+  ON users      USING BTREE (username);
 
 CREATE UNIQUE INDEX topics_slug_uindex
-  ON topics   USING BTREE (slug);
+  ON topics     USING BTREE (slug);
 
-CREATE INDEX        comments_author_id_index
-  ON comments USING BTREE (author_id);
+CREATE        INDEX comments_author_id_index
+  ON comments   USING BTREE (author_id);
 
-CREATE INDEX        comments_root_id_index
-  ON comments USING BTREE (root_id);
+CREATE        INDEX comments_root_id_index
+  ON comments   USING BTREE (root_id);
 
-CREATE INDEX        comments_parent_id_index
-  ON comments USING BTREE (parent_id);
+CREATE        INDEX comments_parent_id_index
+  ON comments   USING BTREE (parent_id);
 
-CREATE INDEX        stories_author_id_index
-  ON stories  USING BTREE (author_id);
+CREATE        INDEX stories_author_id_index
+  ON stories    USING BTREE (author_id);
 
-CREATE INDEX        stories_topic_id_index
-  ON stories  USING BTREE (topic_id);
+CREATE        INDEX stories_topic_id_index
+  ON stories    USING BTREE (topic_id);
