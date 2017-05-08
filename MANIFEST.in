@@ -4,7 +4,7 @@ include requirements.txt
 include requirements-dev.txt
 include requirements-test.txt
 
-recursive-include thebestory *
+recursive-include tbs *
 recursive-include tests *
 
 global-exclude .

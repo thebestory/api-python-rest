@@ -27,7 +27,7 @@ setup(
     license='',
     long_description=long_description,
 
-    packages=['thebestory'],
+    packages=['tbs'],
 
     install_requires=install_requires,
     tests_require=install_requires + tests_requires,

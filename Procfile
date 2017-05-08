@@ -1,1 +1,1 @@
-web: python thebestory/application.py
+web: python bootstrap.py
