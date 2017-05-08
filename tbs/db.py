@@ -26,4 +26,4 @@ async def before_start_listener(app, loop):
 
 
 async def after_stop_listener(app, loop):
-    pool.close()
+    await pool.close()

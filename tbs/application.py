@@ -6,6 +6,7 @@ import functools
 
 from sanic import Sanic
 
+import tbs
 from tbs import config, controllers
 
 
@@ -14,7 +15,7 @@ app = Sanic()
 
 async def invoke_listeners(app, loop, listeners):
     for listener in listeners:
-        await functools.reduce(getattr, listener.split('.'))(app, loop)
+        await functools.reduce(getattr, [tbs] + listener.split('.'))(app, loop)
 
 
 def add_routes(app):
