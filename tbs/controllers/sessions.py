@@ -5,17 +5,17 @@ The Bestory Project
 from sanic.response import json
 
 
-def index(request):
+def list_sessions(request):
     return json({'hello': 'world'})
 
 
-def create(request):
+def create_session(request):
     return json({'hello': 'world'})
 
 
-def show(request, id):
+def show_session(request, id):
     return json({'hello': 'world'})
 
 
-def delete(request):
+def delete_session(request):
     return json({'hello': 'world'})

@@ -2,7 +2,7 @@
 The Bestory Project
 """
 
-from tbs import views
+from tbs.views import user as user_view
 
 
 def render(session):
@@ -18,4 +18,4 @@ def render_user(user_id, user=None):
     if user is None:
         return {"id": user_id}
     else:
-        return views.user.render(user)
+        return user_view.render(user)

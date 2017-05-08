@@ -2,7 +2,8 @@
 The Bestory Project
 """
 
-from tbs import views
+from tbs.views import user as user_view
+from tbs.views import topic as topic_view
 
 
 def render(story):
@@ -26,14 +27,14 @@ def render_author(author_id, author=None):
     if author is None:
         return {"id": author_id}
     else:
-        return views.user.render(author)
+        return user_view.render(author)
 
 
 def render_topic(topic_id, topic=None):
     if topic is None:
         return {"id": topic_id}
     else:
-        return views.topic.render(topic)
+        return topic_view.render(topic)
 
 
 def render_date(date):

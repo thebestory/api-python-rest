@@ -5,7 +5,7 @@ The Bestory Project
 import time
 import logging
 
-from tbs import config
+from tbs.config import snowflake as config
 
 
 logger = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ def real_timestamp_of_snowflake(snowflake: int) -> int:
     """
     Get timestamp in ms from computer epoch - Midnight January 1, 1970.
     """
-    return timestamp_of_snowflake(snowflake) + config.snowflake.EPOCH
+    return timestamp_of_snowflake(snowflake) + config.EPOCH
 
 
 def machine_id_of_snowflake(snowflake: int) -> int:
@@ -56,13 +56,13 @@ def first_snowflake_for_timestamp(timestamp: int, machine_id: int=0) -> int:
     First Snowflake ID for timestamp. Machine ID can also be specified.
     """
     return (
-        ((timestamp - config.snowflake.EPOCH) << timestamp_shift) |
+        ((timestamp - config.EPOCH) << timestamp_shift) |
         (machine_id << machine_id_shift) |
         0
     )
 
 
-def generator(machine_id: int=config.snowflake.MACHINE_ID,
+def generator(machine_id: int=config.MACHINE_ID,
               sleep=lambda x: time.sleep(x / 1000.0),
               now=lambda: int(time.time() * 1000)):
     assert 0 <= machine_id <= max_machine_id
@@ -92,7 +92,7 @@ def generator(machine_id: int=config.snowflake.MACHINE_ID,
         last_timestamp = timestamp
 
         yield (
-            ((timestamp - config.snowflake.EPOCH) << timestamp_shift) |
+            ((timestamp - config.EPOCH) << timestamp_shift) |
             (machine_id << machine_id_shift) |
             sequence_number
         )

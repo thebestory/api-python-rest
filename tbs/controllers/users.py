@@ -5,13 +5,13 @@ The Bestory Project
 from sanic.response import json
 
 
-def create(request):
+def create_user(request):
     return json({'hello': 'world'})
 
 
-def show(request, username):
+def show_user(request, username):
     return json({'hello': 'world'})
 
 
-def update(request, username):
+def update_user(request, username):
     return json({'hello': 'world'})

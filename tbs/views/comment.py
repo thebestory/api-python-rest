@@ -2,7 +2,7 @@
 The Bestory Project
 """
 
-from tbs import views
+from tbs.views import user as user_view
 
 
 def render(comment):
@@ -27,7 +27,7 @@ def render_author(author_id, author=None):
     if author is None:
         return {"id": author_id}
     else:
-        return views.user.render(author)
+        return user_view.render(author)
 
 
 def render_root(root_id):
