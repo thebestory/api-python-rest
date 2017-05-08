@@ -8,7 +8,7 @@ from tbs.config import endpoints
 from tbs.config import listeners
 
 
-app = Sanic()
+instance = Sanic()
 
 
 async def invoke_listeners(app, loop, _listeners):
@@ -25,24 +25,24 @@ def add_routes(app):
         )
 
 
-@app.listener('before_server_start')
+@instance.listener('before_server_start')
 async def before_start(app, loop):
     await invoke_listeners(app, loop, listeners.before_start)
 
 
-@app.listener('after_server_start')
+@instance.listener('after_server_start')
 async def after_start(app, loop):
     await invoke_listeners(app, loop, listeners.after_start)
 
 
-@app.listener('before_server_stop')
+@instance.listener('before_server_stop')
 async def before_stop(app, loop):
     await invoke_listeners(app, loop, listeners.before_stop)
 
 
-@app.listener('after_server_stop')
+@instance.listener('after_server_stop')
 async def after_stop(app, loop):
     await invoke_listeners(app, loop, listeners.after_stop)
 
 
-add_routes(app)
+add_routes(instance)

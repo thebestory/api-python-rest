@@ -5,8 +5,10 @@ The Bestory Project
 import os
 import urllib.parse
 
-from tbs import config
-from tbs.application import app
+from tbs import app
+from tbs.config import app as app_config
+from tbs.config import db as db_config
+from tbs.config import snowflake as snowflake_config
 
 
 if __name__ == '__main__':
@@ -16,10 +18,10 @@ if __name__ == '__main__':
     machine_id = os.environ.get("MACHINE_ID")
 
     if host is not None:
-        config.app.HOST = host
+        app_config.HOST = host
 
     if port is not None:
-        config.app.PORT = port
+        app_config.PORT = port
 
     if db is None:
         raise ValueError("Database URL must be provided by the environment")
@@ -27,22 +29,22 @@ if __name__ == '__main__':
     if machine_id is None:
         raise ValueError("Machine ID must be provided by the environment")
 
-    config.snowflake.MACHINE_ID = machine_id
+    snowflake_config.MACHINE_ID = machine_id
 
     db = urllib.parse.urlparse(db)
 
-    config.db.HOST = db.hostname
-    config.db.PORT = db.port
-    config.db.USER = db.username
-    config.db.PASSWORD = db.password
-    config.db.DATABASE = db.path[1:]
+    db_config.HOST = db.hostname
+    db_config.PORT = db.port
+    db_config.USER = db.username
+    db_config.PASSWORD = db.password
+    db_config.DATABASE = db.path[1:]
 
-    app.run(
-        host=config.app.HOST,
-        port=config.app.PORT,
-        debug=config.app.DEBUG,
-        ssl=config.app.SSL,
-        sock=config.app.SOCK,
-        workers=config.app.WORKERS,
-        loop=config.app.LOOP
+    app.instance.run(
+        host=app_config.HOST,
+        port=app_config.PORT,
+        debug=app_config.DEBUG,
+        ssl=app_config.SSL,
+        sock=app_config.SOCK,
+        workers=app_config.WORKERS,
+        loop=app_config.LOOP
     )
