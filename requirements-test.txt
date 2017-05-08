@@ -1,2 +1,2 @@
-asynctest
-pytest-asyncio
+asynctest==0.10.0
+pytest-asyncio==0.5.0
