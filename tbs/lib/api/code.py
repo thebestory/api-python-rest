@@ -2,6 +2,7 @@
 The Bestory Project
 """
 
+
 ERROR = {
     # API errors
     1001: "Endpoint not found",

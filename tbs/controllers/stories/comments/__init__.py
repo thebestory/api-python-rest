@@ -4,6 +4,8 @@ The Bestory Project
 
 from sanic.response import json
 
+from tbs.controllers.stories.comments import likes
+
 
 def index(request, story_id):
     return json({'hello': 'world'})

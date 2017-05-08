@@ -3,6 +3,7 @@ The Bestory Project
 """
 
 from typing import Iterator
+
 from tbs.lib import snowflake
 
 

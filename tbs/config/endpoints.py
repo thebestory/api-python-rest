@@ -101,88 +101,88 @@ topics = [
 stories = [
     {
         'path': '/stories',
-        'handler': app.tbs.controllers.stories.create,
+        'handler': controllers.stories.create,
         'methods': ['POST']
     },
     {
         'path': '/stories/<id:int>',
-        'handler': app.tbs.controllers.stories.show,
+        'handler': controllers.stories.show,
         'methods': ['GET']
     },
     {
         'path': '/stories/<id:int>',
-        'handler': app.tbs.controllers.stories.update,
+        'handler': controllers.stories.update,
         'methods': ['PATCH', 'PUT']
     },
     {
         'path': '/stories/<id:int>',
-        'handler': app.tbs.controllers.stories.delete,
+        'handler': controllers.stories.delete,
         'methods': ['DELETE']
     },
 
     # story comments
     {
         'path': '/stories/<story_id:int>/comments',
-        'handler': app.tbs.controllers.stories.comments.index,
+        'handler': controllers.stories.comments.index,
         'methods': ['GET']
     },
     {
         'path': '/stories/<story_id:int>/comments',
-        'handler': app.tbs.controllers.stories.comments.create,
+        'handler': controllers.stories.comments.create,
         'methods': ['POST']
     },
     {
         'path': '/stories/<story_id:int>/comments/<id:int>',
-        'handler': app.tbs.controllers.stories.comments.show,
+        'handler': controllers.stories.comments.show,
         'methods': ['GET']
     },
     {
         'path': '/stories/<story_id:int>/comments/<id:int>',
-        'handler': app.tbs.controllers.stories.comments.create,
+        'handler': controllers.stories.comments.create,
         'methods': ['POST']
     },
     {
         'path': '/stories/<story_id:int>/comments/<id:int>',
-        'handler': app.tbs.controllers.stories.comments.update,
+        'handler': controllers.stories.comments.update,
         'methods': ['PATCH', 'PUT']
     },
     {
         'path': '/stories/<story_id:int>/comments/<id:int>',
-        'handler': app.tbs.controllers.stories.comments.delete,
+        'handler': controllers.stories.comments.delete,
         'methods': ['DELETE']
     },
 
     # story likes
     {
         'path': '/stories/<story_id:int>/likes',
-        'handler': app.tbs.controllers.stories.likes.show,
+        'handler': controllers.stories.likes.show,
         'methods': ['GET']
     },
     {
         'path': '/stories/<story_id:int>/likes',
-        'handler': app.tbs.controllers.stories.likes.create,
+        'handler': controllers.stories.likes.create,
         'methods': ['POST', 'PATCH', 'PUT']
     },
     {
         'path': '/stories/<story_id:int>/likes',
-        'handler': app.tbs.controllers.stories.likes.delete,
+        'handler': controllers.stories.likes.delete,
         'methods': ['DELETE']
     },
 
     # story comment likes
     {
         'path': '/stories/<story_id:int>/comments/<comment_id:int>/likes',
-        'handler': app.tbs.controllers.stories.comments.likes.show,
+        'handler': controllers.stories.comments.likes.show,
         'methods': ['GET']
     },
     {
         'path': '/stories/<story_id:int>/comments/<comment_id:int>/likes',
-        'handler': app.tbs.controllers.stories.comments.likes.create,
+        'handler': controllers.stories.comments.likes.create,
         'methods': ['POST', 'PATCH', 'PUT']
     },
     {
         'path': '/stories/<story_id:int>/comments/<comment_id:int>/likes',
-        'handler': app.tbs.controllers.stories.comments.likes.delete,
+        'handler': controllers.stories.comments.likes.delete,
         'methods': ['DELETE']
     },
 ]

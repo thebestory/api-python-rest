@@ -4,7 +4,7 @@ The Bestory Project
 
 from collections import OrderedDict
 
-from .code import ERROR
+from tbs.lib.api.code import ERROR
 
 __all__ = [
     "ok",

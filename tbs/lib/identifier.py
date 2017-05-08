@@ -2,6 +2,7 @@
 The Bestory Project
 """
 
+
 ALPHABET = {
     36: "0123456789abcdefghijklmnopqrstuvwxyz",
 }
