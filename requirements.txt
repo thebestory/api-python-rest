@@ -1,4 +1,4 @@
-sanic==0.5.2
+sanic==0.5.4
 asyncpg==0.10.1
 sqlalchemy==1.1.9
 asyncpgsa==0.10.1
