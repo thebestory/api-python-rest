@@ -2,18 +2,18 @@
 The Bestory Project
 """
 
-import asyncpg
+import asyncpgsa
 
 from tbs.config import db
 
 
-pool: asyncpg.pool.Pool
+pool: asyncpgsa.pool.SAPool
 
 
 async def before_start_listener(app, loop):
     global pool
 
-    pool = await asyncpg.create_pool(
+    pool = await asyncpgsa.create_pool(
         host=db.HOST,
         port=db.PORT,
         user=db.USER,
