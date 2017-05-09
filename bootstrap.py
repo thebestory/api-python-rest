@@ -45,6 +45,5 @@ if __name__ == '__main__':
         debug=app_config.DEBUG,
         ssl=app_config.SSL,
         sock=app_config.SOCK,
-        workers=app_config.WORKERS,
-        loop=app_config.LOOP
+        workers=app_config.WORKERS
     )

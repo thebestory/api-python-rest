@@ -11,7 +11,6 @@ SSL = None
 
 SOCK = None
 
-WORKERS = 1
-LOOP = None
+WORKERS = 4
 
 # PROTOCOL = None
