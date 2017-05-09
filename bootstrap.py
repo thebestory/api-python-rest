@@ -21,7 +21,7 @@ if __name__ == '__main__':
         app_config.HOST = host
 
     if port is not None:
-        app_config.PORT = port
+        app_config.PORT = int(port)
 
     if db is None:
         raise ValueError("Database URL must be provided by the environment")
@@ -29,12 +29,12 @@ if __name__ == '__main__':
     if machine_id is None:
         raise ValueError("Machine ID must be provided by the environment")
 
-    snowflake_config.MACHINE_ID = machine_id
+    snowflake_config.MACHINE_ID = int(machine_id)
 
     db = urllib.parse.urlparse(db)
 
     db_config.HOST = db.hostname
-    db_config.PORT = db.port
+    db_config.PORT = int(db.port)
     db_config.USER = db.username
     db_config.PASSWORD = db.password
     db_config.DATABASE = db.path[1:]
