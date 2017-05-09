@@ -21,6 +21,8 @@ async def before_start_listener(app, loop):
         database=db.DATABASE,
         min_size=db.POOL_MIN_SIZE,
         max_size=db.POOL_MAX_SIZE,
+        max_queries=db.MAX_QUERIES,
+        max_inactive_connection_lifetime=db.MAX_INACTIVE_CONNECTION_LIFETIME,
         loop=loop
     )
 
