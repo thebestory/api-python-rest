@@ -3,14 +3,14 @@
 --
 
 CREATE TABLE snowflakes (
-  id                  BIGINT                                 NOT NULL,
-  type                CHARACTER VARYING(32)                  NOT NULL
+  id   BIGINT                NOT NULL,
+  type CHARACTER VARYING(32) NOT NULL
 );
 
 CREATE TABLE users (
   id              BIGINT                                 NOT NULL,
   username        CHARACTER VARYING(32)                  NOT NULL,
-  email           CHARACTER VARYING(32)                  NOT NULL,
+  email           CHARACTER VARYING(255)                 NOT NULL,
   password        CHARACTER VARYING(255)                 NOT NULL,
   comments_count  INTEGER DEFAULT 0                      NOT NULL,
   likes_count     INTEGER DEFAULT 0                      NOT NULL,
@@ -44,11 +44,12 @@ CREATE TABLE comments (
 );
 
 CREATE TABLE likes (
-  user_id      BIGINT                                 NOT NULL,
-  object_id    BIGINT                                 NOT NULL,
-  valid        BOOLEAN DEFAULT TRUE                   NOT NULL,
-  added_date   TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL,
-  removed_date TIMESTAMP WITH TIME ZONE
+  id             BIGINT                                 NOT NULL,
+  user_id        BIGINT                                 NOT NULL,
+  object_id      BIGINT                                 NOT NULL,
+  valid          BOOLEAN DEFAULT TRUE                   NOT NULL,
+  submitted_date TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL,
+  removed_date   TIMESTAMP WITH TIME ZONE
 );
 
 CREATE TABLE stories (
@@ -109,6 +110,12 @@ CREATE        INDEX comments_root_id_index
 
 CREATE        INDEX comments_parent_id_index
   ON comments   USING BTREE (parent_id);
+
+CREATE        INDEX likes_user_id_index
+  ON stories    USING BTREE (user_id);
+
+CREATE        INDEX likes_object_id_index
+  ON stories    USING BTREE (object_id);
 
 CREATE        INDEX stories_author_id_index
   ON stories    USING BTREE (author_id);
