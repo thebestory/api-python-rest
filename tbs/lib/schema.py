@@ -39,7 +39,7 @@ snowflakes = sa.Table(
     METADATA,
 
     sa.Column("id", sa.BigInteger, primary_key=True),
-    sa.Column("type", sa.String(32), nullable=False)
+    sa.Column("type", sa.String(32), index=True, nullable=False)
 )
 
 users = sa.Table(
@@ -50,7 +50,7 @@ users = sa.Table(
 
     sa.Column("username", sa.String(32), unique=True, nullable=False),
     sa.Column("email", sa.String(255), unique=True, nullable=False),
-    sa.Column("password", sa.String(255), unique=True, nullable=False),
+    sa.Column("password", sa.String(255), nullable=False),
 
     sa.Column("comments_count", sa.Integer, default=0, nullable=False),
     sa.Column("likes_count", sa.Integer, default=0, nullable=False),

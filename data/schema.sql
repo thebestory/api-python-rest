@@ -99,6 +99,9 @@ CREATE        INDEX snowflakes_type_index
 CREATE UNIQUE INDEX users_username_uindex
   ON users      USING BTREE (username);
 
+CREATE UNIQUE INDEX users_email_uindex
+  ON users      USING BTREE (email);
+
 CREATE UNIQUE INDEX topics_slug_uindex
   ON topics     USING BTREE (slug);
 
@@ -112,10 +115,10 @@ CREATE        INDEX comments_parent_id_index
   ON comments   USING BTREE (parent_id);
 
 CREATE        INDEX likes_user_id_index
-  ON stories    USING BTREE (user_id);
+  ON likes      USING BTREE (user_id);
 
 CREATE        INDEX likes_object_id_index
-  ON stories    USING BTREE (object_id);
+  ON likes      USING BTREE (object_id);
 
 CREATE        INDEX stories_author_id_index
   ON stories    USING BTREE (author_id);
