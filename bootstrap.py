@@ -25,7 +25,7 @@ if __name__ == '__main__':
         app_config.PORT = int(port)
 
     if seed is not None:
-        db_config.seed = True
+        db_config.SEED = True
 
     if db is None:
         raise ValueError("Database URL must be provided by the environment")
