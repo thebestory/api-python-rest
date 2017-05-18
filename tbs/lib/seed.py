@@ -2,7 +2,7 @@
 The Bestory Project
 """
 
-from asyncpg import Connection
+from asyncpg.connection import Connection
 
 from tbs.lib.stores import user as user_store
 
@@ -62,6 +62,7 @@ stories = [
     {'author': 'thebestory', 'topic': 'funny', 'content': 'My husband is a virologist. Last Saturday after his night shift he went to the lake. Of course, he took me and the kids, we had a barbeque till the night, and then there came a whole bunch of mosquitoes, but he didn\'t get lost and brought us four biohazard suits. People all around us then started leaving as soon as they\'d seen us :)'},
     {'author': 'thebestory', 'topic': 'funny', 'content': 'The only person that can be faster than a man with 1% on his phone is one that\'s running to a yawning cat to put his finger in the cat\'s mouth.'}
 ]
+
 
 async def insert_users(conn: Connection):
     for user in users:
