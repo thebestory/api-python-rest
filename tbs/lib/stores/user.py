@@ -18,9 +18,11 @@ async def get(id: int, conn: Connection) -> Record:
     Get a single user.
     """
 
-    user = await conn.fetchrow(*asyncpgsa.compile_query(
+    query, params = asyncpgsa.compile_query(
         schema.users.select().where(schema.users.c.id == id)
-    ))
+    )
+
+    user = await conn.fetchrow(query, *params)
 
     if not user:
         raise ValueError
@@ -39,13 +41,14 @@ async def create(username: str,
     async with conn.transaction():
         snowflake = await snowflake_store.create(type=SNOWFLAKE_TYPE, conn=conn)
 
-        await conn.execute(*asyncpgsa.compile_query(
+        query, params = asyncpgsa.compile_query(
             schema.users.insert().values(
                 id=snowflake["id"],
                 username=username,
                 email=email,
                 password=password
             )
-        ))
+        )
 
+        await conn.execute(query, *params)
         return await get(id=snowflake["id"], conn=conn)
