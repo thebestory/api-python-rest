@@ -18,7 +18,7 @@ async def get(id: int, conn: Connection) -> Record:
     Get a single user.
     """
 
-    user = await conn.fetchrow(asyncpgsa.compile_query(
+    user = await conn.fetchrow(*asyncpgsa.compile_query(
         schema.users.select().where(schema.users.c.id == id)
     ))
 
@@ -39,7 +39,7 @@ async def create(username: str,
     async with conn.transaction():
         snowflake = await snowflake_store.create(type=SNOWFLAKE_TYPE, conn=conn)
 
-        await conn.execute(asyncpgsa.compile_query(
+        await conn.execute(*asyncpgsa.compile_query(
             schema.users.insert().values(
                 id=snowflake["id"],
                 username=username,

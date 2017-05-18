@@ -18,7 +18,7 @@ async def get(id: int, conn: Connection) -> Record:
     Get a single Snowflake ID.
     """
 
-    snowflake = await conn.fetchrow(asyncpgsa.compile_query(
+    snowflake = await conn.fetchrow(*asyncpgsa.compile_query(
         schema.snowflakes.select().where(schema.snowflakes.c.id == id)
     ))
 
@@ -37,7 +37,7 @@ async def create(type: str, conn: Connection) -> Record:
     if not isinstance(id, int):
         raise ValueError
 
-    await conn.execute(asyncpgsa.compile_query(
+    await conn.execute(*asyncpgsa.compile_query(
         schema.snowflakes.insert().values(id=id, type=type)
     ))
 
