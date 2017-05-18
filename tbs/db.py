@@ -33,7 +33,7 @@ async def seed_database(app, loop):
     if config.SEED:
         async with pool.acquire() as conn:
             async with conn.transaction() as conn:
-                seed.insert(conn)
+                await seed.insert(conn)
 
 
 async def before_start_listener(app, loop):

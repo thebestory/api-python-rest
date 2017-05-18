@@ -78,9 +78,9 @@ async def insert_stories(conn: Connection):
 
 
 async def insert(conn: Connection):
-    insert_users(conn)
-    insert_topics(conn)
-    insert_stories(conn)
+    await insert_users(conn)
+    await insert_topics(conn)
+    await insert_stories(conn)
 
 
 async def clear(conn: Connection):
