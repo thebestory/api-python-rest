@@ -37,8 +37,8 @@ async def seed_database(app, loop):
 
 
 async def before_start_listener(app, loop):
-    connect_database(app, loop)
-    seed_database(app, loop)
+    await connect_database(app, loop)
+    await seed_database(app, loop)
 
 
 async def after_stop_listener(app, loop):
