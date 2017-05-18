@@ -37,6 +37,10 @@ async def create(type: str, conn: Connection) -> Record:
     if not isinstance(id, int):
         raise ValueError
 
+    print(asyncpgsa.compile_query(
+        schema.snowflakes.insert().values(id=id, type=type)
+    ))
+
     await conn.execute(*asyncpgsa.compile_query(
         schema.snowflakes.insert().values(id=id, type=type)
     ))
