@@ -12,7 +12,7 @@ from tbs.lib import seed
 pool: Pool
 
 
-async def connect_database(app, loop):
+async def before_start_listener(app, loop):
     global pool
 
     pool = await asyncpg.create_pool(
@@ -29,16 +29,11 @@ async def connect_database(app, loop):
     )
 
 
-async def seed_database(app, loop):
+async def after_start_listener(app, loop):
     if config.SEED:
         async with pool.acquire() as conn:
             async with conn.transaction():
                 await seed.insert(conn)
-
-
-async def before_start_listener(app, loop):
-    await connect_database(app, loop)
-    await seed_database(app, loop)
 
 
 async def after_stop_listener(app, loop):

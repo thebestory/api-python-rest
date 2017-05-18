@@ -17,7 +17,9 @@ before_start = [
 
 # List of listeners, that will be iterated, and each listener will be
 # invoked after server start.
-after_start = []
+after_start = [
+    db.after_start_listener
+]
 
 # List of listeners, that will be iterated, and each listener will be
 # invoked before server stop.
