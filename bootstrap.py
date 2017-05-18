@@ -16,12 +16,16 @@ if __name__ == '__main__':
     port = os.environ.get("PORT")
     db = os.environ.get("DATABASE_URL")
     machine_id = os.environ.get("MACHINE_ID")
+    seed = os.environ.get("SEED")
 
     if host is not None:
         app_config.HOST = host
 
     if port is not None:
         app_config.PORT = int(port)
+
+    if seed is not None:
+        db_config.seed = False
 
     if db is None:
         raise ValueError("Database URL must be provided by the environment")

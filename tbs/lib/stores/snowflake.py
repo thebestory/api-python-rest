@@ -2,53 +2,43 @@
 The Bestory Project
 """
 
-from asyncpgsa.connection import SAConnection
-from asyncpgsa.record import Record
+from asyncpg import Connection
+from asyncpg import Record
+import asyncpgsa
 
-from tbs import db
-from tbs import snowflake
+from tbs import snowflake_generator
 from tbs.lib import schema
 
 
 SNOWFLAKE_TYPE = "id"
 
 
-async def get(id_: int, conn: SAConnection=None) -> Record:
+async def get(id: int, conn: Connection) -> Record:
     """
-    Get Snowflake ID.
+    Get a single Snowflake ID.
     """
 
-    if conn is None:
-        conn = db.pool.acquire()
-
-    sf = await conn.fetchrow(schema.snowflakes.select().where(
-        schema.snowflakes.c.id == id_
+    snowflake = await conn.fetchrow(asyncpgsa.compile_query(
+        schema.snowflakes.select().where(schema.snowflakes.c.id == id)
     ))
 
-    if sf:
-        return sf
-    else:
+    if not snowflake:
         raise ValueError
 
+    return snowflake
 
-async def create(type_: str=SNOWFLAKE_TYPE, conn: SAConnection=None) -> int:
+
+async def create(type: str, conn: Connection) -> Record:
     """
     Create a new Snowflake ID.
     """
 
-    if conn is None:
-        conn = db.pool.acquire()
-
-    sf = snowflake.generate()
-    if not isinstance(sf, int):
+    id = snowflake_generator.generate()
+    if not isinstance(id, int):
         raise ValueError
 
-    id_ = await conn.insert(schema.snowflakes.insert().values(
-        id=sf,
-        type=type_
+    await conn.execute(asyncpgsa.compile_query(
+        schema.snowflakes.insert().values(id=id, type=type)
     ))
 
-    if id_ is None:
-        raise ValueError
-
-    return sf
+    return await get(id=id, conn=conn)

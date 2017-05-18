@@ -4,7 +4,7 @@ The Bestory Project
 
 from tbs import (
     db,
-    snowflake
+    snowflake_generator
 )
 
 
@@ -12,7 +12,7 @@ from tbs import (
 # invoked before server start.
 before_start = [
     db.before_start_listener,
-    snowflake.before_start_listener
+    snowflake_generator.before_start_listener
 ]
 
 # List of listeners, that will be iterated, and each listener will be
