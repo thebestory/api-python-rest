@@ -66,7 +66,7 @@ stories = [
 
 async def insert_users(conn: Connection):
     for user in users:
-        user_store.create(**user, conn=conn)
+        await user_store.create(**user, conn=conn)
 
 
 async def insert_topics(conn: Connection):

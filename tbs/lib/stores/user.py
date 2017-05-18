@@ -37,7 +37,7 @@ async def create(username: str,
     """
 
     with conn.transaction() as conn:
-        snowflake = snowflake_store.create(type=SNOWFLAKE_TYPE, conn=conn)
+        snowflake = await snowflake_store.create(type=SNOWFLAKE_TYPE, conn=conn)
 
         await conn.execute(asyncpgsa.compile_query(
             schema.users.insert().values(
