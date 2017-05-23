@@ -2,4 +2,4 @@ sanic==0.5.4
 asyncpg==0.11.0
 sqlalchemy==1.1.9
 asyncpgsa==0.10.1
-pendulum==1.2.0
+pendulum==1.2.1
