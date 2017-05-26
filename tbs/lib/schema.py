@@ -2,7 +2,7 @@
 The Bestory Project
 """
 
-import datetime
+from datetime import datetime
 
 import pendulum
 import sqlalchemy as sa
@@ -21,7 +21,7 @@ class DateTime(sa.TypeDecorator):
 
     def process_bind_param(self, value, dialect):
         if value is not None:
-            if not isinstance(value, datetime.datetime):
+            if not isinstance(value, datetime):
                 raise TypeError('Expected datetime.datetime, not ' +
                                 repr(value))
             elif value.tzinfo is None:
