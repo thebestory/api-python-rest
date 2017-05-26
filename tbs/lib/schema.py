@@ -56,7 +56,7 @@ users = sa.Table(
     sa.Column("likes_count", sa.Integer, default=0, nullable=False),
     sa.Column("stories_count", sa.Integer, default=0, nullable=False),
 
-    sa.Column("registered_at", DateTime,
+    sa.Column("registered_date", DateTime,
               default=lambda: datetime.utcnow().replace(tzinfo=pendulum.UTC),
               nullable=False)
 )
