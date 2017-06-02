@@ -14,7 +14,7 @@ from tbs.views import user as user_view
 async def create_user(request):
     user = request.json
 
-    with db.pool.acquire() as conn:
+    async with db.pool.acquire() as conn:
         user = await user_store.create(
             conn=conn,
             username=user["username"],
@@ -27,7 +27,7 @@ async def create_user(request):
 
 async def show_user(request, id):
     try:
-        with db.pool.acquire() as conn:
+        async with db.pool.acquire() as conn:
             user = await user_store.get(conn=conn, id=id)
             return json(response_wrapper.ok(user_view.render(user)))
     except exceptions.NotFoundError:
@@ -37,6 +37,6 @@ async def show_user(request, id):
 async def update_user(request, id):
     user = request.json
 
-    with db.pool.acquire() as conn:
+    async with db.pool.acquire() as conn:
         user = await user_store.update(conn=conn, id=id, **user)
         return json(response_wrapper.ok(user_view.render(user)))
