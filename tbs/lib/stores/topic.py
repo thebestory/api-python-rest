@@ -13,13 +13,30 @@ from tbs.lib.stores import snowflake as snowflake_store
 SNOWFLAKE_TYPE = "topic"
 
 
-async def get(id: int, conn: Connection) -> Record:
+async def get(conn: Connection, id: int) -> Record:
     """
     Get a single topic.
     """
 
     query, params = asyncpgsa.compile_query(
         schema.topics.select().where(schema.topics.c.id == id)
+    )
+
+    topic = await conn.fetchrow(query, *params)
+
+    if not topic:
+        raise ValueError
+
+    return topic
+
+
+async def get_by_slug(conn: Connection, slug: str) -> Record:
+    """
+    Get a single topic.
+    """
+
+    query, params = asyncpgsa.compile_query(
+        schema.topics.select().where(schema.topics.c.slug == slug)
     )
 
     topic = await conn.fetchrow(query, *params)
@@ -42,7 +59,7 @@ async def create(conn: Connection,
     """
 
     async with conn.transaction():
-        snowflake = await snowflake_store.create(type=SNOWFLAKE_TYPE, conn=conn)
+        snowflake = await snowflake_store.create(conn=conn, type=SNOWFLAKE_TYPE)
 
         query, params = asyncpgsa.compile_query(
             schema.topics.insert().values(
@@ -57,4 +74,4 @@ async def create(conn: Connection,
         )
 
         await conn.execute(query, *params)
-        return await get(id=snowflake["id"], conn=conn)
+        return await get(conn=conn, id=snowflake["id"])
