@@ -53,7 +53,9 @@ users = sa.Table(
     sa.Column("password", sa.String(255), nullable=False),
 
     sa.Column("comments_count", sa.Integer, default=0, nullable=False),
-    sa.Column("likes_count", sa.Integer, default=0, nullable=False),
+    sa.Column("comment_reactions_count", sa.Integer, default=0,
+              nullable=False),
+    sa.Column("story_reactions_count", sa.Integer, default=0, nullable=False),
     sa.Column("stories_count", sa.Integer, default=0, nullable=False),
 
     sa.Column("registered_date", DateTime,
@@ -85,39 +87,33 @@ comments = sa.Table(
     sa.Column("id", sa.BigInteger, primary_key=True),
 
     sa.Column("author_id", sa.BigInteger, index=True, nullable=False),
-    sa.Column("root_id", sa.BigInteger, index=True, nullable=False),
-    sa.Column("parent_id", sa.BigInteger, index=True, nullable=False),
+    sa.Column("story_id", sa.BigInteger, index=True, nullable=False),
 
     sa.Column("content", sa.Text(4096), nullable=False),
 
-    sa.Column("comments_count", sa.Integer, default=0, nullable=False),
-    sa.Column("likes_count", sa.Integer, default=0, nullable=False),
+    sa.Column("reactions_count", sa.Integer, default=0, nullable=False),
 
-    sa.Column("is_published", sa.Boolean, default=False, nullable=False),
     sa.Column("is_removed", sa.Boolean, default=False, nullable=False),
 
     sa.Column("submitted_date", DateTime,
               default=lambda: datetime.utcnow().replace(tzinfo=pendulum.UTC),
               nullable=False),
-    sa.Column("published_date", DateTime, nullable=True),
     sa.Column("edited_date", DateTime, nullable=True)
 )
 
-likes = sa.Table(
-    "likes",
+reactions = sa.Table(
+    "reactions",
     METADATA,
-
-    sa.Column("id", sa.BigInteger, primary_key=True),
 
     sa.Column("user_id", sa.BigInteger, index=True, nullable=False),
     sa.Column("object_id", sa.BigInteger, index=True, nullable=False),
+    sa.Column("reaction_id", sa.BigInteger, index=True, nullable=False),
 
-    sa.Column("valid", sa.Boolean, nullable=False),
+    sa.Column("is_removed", sa.Boolean, nullable=False),
 
     sa.Column("submitted_date", DateTime,
               default=lambda: datetime.utcnow().replace(tzinfo=pendulum.UTC),
-              nullable=False),
-    sa.Column("removed_date", DateTime, nullable=True)
+              nullable=False)
 )
 
 stories = sa.Table(
@@ -132,7 +128,7 @@ stories = sa.Table(
     sa.Column("content", sa.Text(8192), nullable=False),
 
     sa.Column("comments_count", sa.Integer, default=0, nullable=False),
-    sa.Column("likes_count", sa.Integer, default=0, nullable=False),
+    sa.Column("reactions_count", sa.Integer, default=0, nullable=False),
 
     sa.Column("is_published", sa.Boolean, default=False, nullable=False),
     sa.Column("is_removed", sa.Boolean, default=False, nullable=False),

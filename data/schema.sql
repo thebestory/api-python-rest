@@ -8,14 +8,15 @@ CREATE TABLE snowflakes (
 );
 
 CREATE TABLE users (
-  id              BIGINT                                 NOT NULL,
-  username        CHARACTER VARYING(32)                  NOT NULL,
-  email           CHARACTER VARYING(255)                 NOT NULL,
-  password        CHARACTER VARYING(255)                 NOT NULL,
-  comments_count  INTEGER DEFAULT 0                      NOT NULL,
-  likes_count     INTEGER DEFAULT 0                      NOT NULL,
-  stories_count   INTEGER DEFAULT 0                      NOT NULL,
-  registered_date TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL
+  id                      BIGINT                                 NOT NULL,
+  username                CHARACTER VARYING(32)                  NOT NULL,
+  email                   CHARACTER VARYING(255)                 NOT NULL,
+  password                CHARACTER VARYING(255)                 NOT NULL,
+  comments_count          INTEGER DEFAULT 0                      NOT NULL,
+  comment_reactions_count INTEGER DEFAULT 0                      NOT NULL,
+  story_reactions_count   INTEGER DEFAULT 0                      NOT NULL,
+  stories_count           INTEGER DEFAULT 0                      NOT NULL,
+  registered_date         TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL
 );
 
 CREATE TABLE topics (
@@ -29,41 +30,36 @@ CREATE TABLE topics (
 );
 
 CREATE TABLE comments (
-  id             BIGINT                                 NOT NULL,
-  author_id      BIGINT                                 NOT NULL,
-  root_id        BIGINT                                 NOT NULL,
-  parent_id      BIGINT                                 NOT NULL,
-  content        TEXT                                   NOT NULL,
-  comments_count INTEGER DEFAULT 0                      NOT NULL,
-  likes_count    INTEGER DEFAULT 0                      NOT NULL,
-  is_published   BOOLEAN DEFAULT FALSE                  NOT NULL,
-  is_removed     BOOLEAN DEFAULT FALSE                  NOT NULL,
-  submitted_date TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL,
-  published_date TIMESTAMP WITH TIME ZONE,
-  edited_date    TIMESTAMP WITH TIME ZONE
+  id              BIGINT                                 NOT NULL,
+  author_id       BIGINT                                 NOT NULL,
+  story_id        BIGINT                                 NOT NULL,
+  content         TEXT                                   NOT NULL,
+  reactions_count INTEGER DEFAULT 0                      NOT NULL,
+  is_removed      BOOLEAN DEFAULT FALSE                  NOT NULL,
+  submitted_date  TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL,
+  edited_date     TIMESTAMP WITH TIME ZONE
 );
 
-CREATE TABLE likes (
-  id             BIGINT                                 NOT NULL,
+CREATE TABLE reactions (
   user_id        BIGINT                                 NOT NULL,
   object_id      BIGINT                                 NOT NULL,
-  valid          BOOLEAN DEFAULT TRUE                   NOT NULL,
-  submitted_date TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL,
-  removed_date   TIMESTAMP WITH TIME ZONE
+  reaction_id    BIGINT                                 NOT NULL,
+  is_removed     BOOLEAN DEFAULT TRUE                   NOT NULL,
+  submitted_date TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL
 );
 
 CREATE TABLE stories (
-  id             BIGINT                                 NOT NULL,
-  author_id      BIGINT                                 NOT NULL,
-  topic_id       BIGINT,
-  content        TEXT                                   NOT NULL,
-  comments_count INTEGER DEFAULT 0                      NOT NULL,
-  likes_count    INTEGER DEFAULT 0                      NOT NULL,
-  is_published   BOOLEAN DEFAULT FALSE                  NOT NULL,
-  is_removed     BOOLEAN DEFAULT FALSE                  NOT NULL,
-  submitted_date TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL,
-  published_date TIMESTAMP WITH TIME ZONE,
-  edited_date    TIMESTAMP WITH TIME ZONE
+  id              BIGINT                                 NOT NULL,
+  author_id       BIGINT                                 NOT NULL,
+  topic_id        BIGINT,
+  content         TEXT                                   NOT NULL,
+  comments_count  INTEGER DEFAULT 0                      NOT NULL,
+  reactions_count INTEGER DEFAULT 0                      NOT NULL,
+  is_published    BOOLEAN DEFAULT FALSE                  NOT NULL,
+  is_removed      BOOLEAN DEFAULT FALSE                  NOT NULL,
+  submitted_date  TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL,
+  published_date  TIMESTAMP WITH TIME ZONE,
+  edited_date     TIMESTAMP WITH TIME ZONE
 );
 
 
@@ -82,9 +78,6 @@ ALTER TABLE ONLY topics
 
 ALTER TABLE ONLY comments
   ADD CONSTRAINT comments_pkey   PRIMARY KEY (id);
-
-ALTER TABLE ONLY likes
-  ADD CONSTRAINT likes_pkey      PRIMARY KEY (id);
 
 ALTER TABLE ONLY stories
   ADD CONSTRAINT stories_pkey    PRIMARY KEY (id);
@@ -108,17 +101,14 @@ CREATE UNIQUE INDEX topics_slug_uindex
 CREATE        INDEX comments_author_id_index
   ON comments   USING BTREE (author_id);
 
-CREATE        INDEX comments_root_id_index
-  ON comments   USING BTREE (root_id);
+CREATE        INDEX comments_story_id_index
+  ON comments   USING BTREE (story_id);
 
-CREATE        INDEX comments_parent_id_index
-  ON comments   USING BTREE (parent_id);
+CREATE        INDEX reactions_user_id_index
+  ON reactions  USING BTREE (user_id);
 
-CREATE        INDEX likes_user_id_index
-  ON likes      USING BTREE (user_id);
-
-CREATE        INDEX likes_object_id_index
-  ON likes      USING BTREE (object_id);
+CREATE        INDEX reactions_object_id_index
+  ON reactions  USING BTREE (object_id);
 
 CREATE        INDEX stories_author_id_index
   ON stories    USING BTREE (author_id);
