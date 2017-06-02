@@ -2,9 +2,9 @@
 The Bestory Project
 """
 
+import asyncpgsa
 from asyncpg.connection import Connection
 from asyncpg.protocol import Record
-import asyncpgsa
 
 from tbs import snowflake_generator
 from tbs.lib import schema
