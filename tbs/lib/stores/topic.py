@@ -32,7 +32,7 @@ async def get(conn: Connection, id: int) -> Record:
 
 async def get_by_slug(conn: Connection, slug: str) -> Record:
     """
-    Get a single topic.
+    Get a single topic by it's slug.
     """
 
     query, params = asyncpgsa.compile_query(
