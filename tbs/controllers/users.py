@@ -15,7 +15,7 @@ async def create_user(request):
     user = request.json
 
     with db.pool.acquire() as conn:
-        user = user_store.create(
+        user = await user_store.create(
             conn=conn,
             username=user["username"],
             email=user["email"],
@@ -28,7 +28,7 @@ async def create_user(request):
 async def show_user(request, id):
     try:
         with db.pool.acquire() as conn:
-            user = user_store.get(conn=conn, id=id)
+            user = await user_store.get(conn=conn, id=id)
             return json(response_wrapper.ok(user_view.render(user)))
     except exceptions.NotFoundError:
         return json(response_wrapper.error(4001), status=404)
@@ -38,5 +38,5 @@ async def update_user(request, id):
     user = request.json
 
     with db.pool.acquire() as conn:
-        user = user_store.update(conn=conn, id=id, **user)
+        user = await user_store.update(conn=conn, id=id, **user)
         return json(response_wrapper.ok(user_view.render(user)))
