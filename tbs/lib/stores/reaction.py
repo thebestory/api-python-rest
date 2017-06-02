@@ -13,7 +13,7 @@ async def list_by_user(conn: Connection,
                        user_id: int,
                        removed: bool=False) -> Record:
     """
-    Get reactions by user.
+    List reactions by user.
     """
     query = schema.reactions.select() \
         .where(schema.reactions.c.user_id == user_id) \
@@ -31,7 +31,7 @@ async def list_by_object(conn: Connection,
                          object_id: int,
                          removed: bool=False) -> Record:
     """
-    Get reactions by object.
+    List reactions by object.
     """
     query = schema.reactions.select() \
         .where(schema.reactions.c.object_id == object_id) \
@@ -50,7 +50,7 @@ async def list_by_user_and_reaction(conn: Connection,
                                     reaction_id: int,
                                     removed: bool=False) -> Record:
     """
-    Get reactions by user and reaction.
+    List reactions by user and reaction.
     """
     query = schema.reactions.select() \
         .where(schema.reactions.c.user_id == user_id) \
@@ -70,7 +70,7 @@ async def list_by_user_and_object(conn: Connection,
                                   object_id: int,
                                   removed: bool=False) -> Record:
     """
-    Get reactions by user and object.
+    List reactions by user and object.
     """
     query = schema.reactions.select() \
         .where(schema.reactions.c.user_id == user_id) \
@@ -90,7 +90,7 @@ async def list_by_object_and_reaction(conn: Connection,
                                       reaction_id: int,
                                       removed: bool=False) -> Record:
     """
-    Get reactions by object and reaction.
+    List reactions by object and reaction.
     """
     query = schema.reactions.select() \
         .where(schema.reactions.c.object_id == object_id) \
@@ -111,7 +111,7 @@ async def list_by_user_and_object_and_reaction(conn: Connection,
                                                reaction_id: int,
                                                removed: bool=False) -> Record:
     """
-    Get reactions by user, object and reaction.
+    List reactions by user, object and reaction.
     """
     query = schema.reactions.select() \
         .where(schema.reactions.c.user_id == user_id) \

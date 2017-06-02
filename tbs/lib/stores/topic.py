@@ -14,6 +14,22 @@ from tbs.lib.stores import snowflake as snowflake_store
 SNOWFLAKE_TYPE = "topic"
 
 
+async def list(conn: Connection, non_active: bool=False) -> Record:
+    """
+    List all topics.
+    """
+    query = schema.topics.select() \
+        .where(schema.topics.c.id == id) \
+        .order_by(schema.topics.c.title)
+
+    if not non_active:
+        query = query.where(schema.topics.c.is_active == True)
+
+    query, params = asyncpgsa.compile_query(query)
+
+    return await conn.fetch(query, *params)
+
+
 async def get(conn: Connection, id: int) -> Record:
     """
     Get a single topic.
