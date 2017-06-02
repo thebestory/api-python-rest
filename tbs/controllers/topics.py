@@ -4,21 +4,51 @@ The Bestory Project
 
 from sanic.response import json
 
+from tbs import db
+from tbs.lib import exceptions
+from tbs.lib import response_wrapper
+from tbs.lib.stores import topic as topic_store
+from tbs.views import user as topic_view
+
 
 async def list_topics(request):
-    return json({"hello": "world"})
+    async with db.pool.acquire() as conn:
+        topics = await topic_store.list(conn=conn)
+        topics = [topic_view.render(topic) for topic in topics]
+        return json(response_wrapper.ok(topics))
 
 
 async def create_topic(request):
-    return json({"hello": "world"})
+    topic = request.json
+
+    async with db.pool.acquire() as conn:
+        topic = await topic_store.create(
+            conn=conn,
+            title=topic["title"],
+            slug=topic["slug"],
+            description=topic["description"],
+            icon=topic["icon"],
+            is_active=topic.get("is_active", False)
+        )
+
+        return json(response_wrapper.ok(topic_view.render(topic)))
 
 
 async def show_topic(request, id):
-    return json({"hello": "world"})
+    try:
+        async with db.pool.acquire() as conn:
+            user = await topic_store.get(conn=conn, id=id)
+            return json(response_wrapper.ok(topic_view.render(user)))
+    except exceptions.NotFoundError:
+        return json(response_wrapper.error(4001), status=404)
 
 
 async def update_topic(request, id):
-    return json({"hello": "world"})
+    topic = request.json
+
+    async with db.pool.acquire() as conn:
+        user = await topic_store.update(conn=conn, id=id, **topic)
+        return json(response_wrapper.ok(topic_view.render(user)))
 
 
 async def delete_topic(request, id):
