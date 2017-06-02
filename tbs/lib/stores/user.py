@@ -18,13 +18,47 @@ from tbs.lib.stores import snowflake as snowflake_store
 SNOWFLAKE_TYPE = "user"
 
 
-async def get(id: int, conn: Connection) -> Record:
+async def get(conn: Connection, id: int) -> Record:
     """
     Get a single user.
     """
 
     query, params = asyncpgsa.compile_query(
         schema.users.select().where(schema.users.c.id == id)
+    )
+
+    user = await conn.fetchrow(query, *params)
+
+    if not user:
+        raise ValueError
+
+    return user
+
+
+async def get_by_username(conn: Connection, username: str) -> Record:
+    """
+    Get a single user by it's username.
+    """
+
+    query, params = asyncpgsa.compile_query(
+        schema.users.select().where(schema.users.c.username == username)
+    )
+
+    user = await conn.fetchrow(query, *params)
+
+    if not user:
+        raise ValueError
+
+    return user
+
+
+async def get_by_email(conn: Connection, email: str) -> Record:
+    """
+    Get a single user by it's email.
+    """
+
+    query, params = asyncpgsa.compile_query(
+        schema.users.select().where(schema.users.c.email == email)
     )
 
     user = await conn.fetchrow(query, *params)
@@ -51,7 +85,7 @@ async def create(conn: Connection,
         registered_date = datetime.utcnow().replace(tzinfo=pendulum.UTC)
 
     async with conn.transaction():
-        snowflake = await snowflake_store.create(type=SNOWFLAKE_TYPE, conn=conn)
+        snowflake = await snowflake_store.create(conn=conn, type=SNOWFLAKE_TYPE)
 
         query, params = asyncpgsa.compile_query(
             schema.users.insert().values(
@@ -68,4 +102,4 @@ async def create(conn: Connection,
         )
 
         await conn.execute(query, *params)
-        return await get(id=snowflake["id"], conn=conn)
+        return await get(conn=conn, id=snowflake["id"])
