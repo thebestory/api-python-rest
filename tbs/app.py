@@ -47,7 +47,7 @@ async def after_stop(app, loop):
     await invoke_listeners(app, loop, listeners.after_stop)
 
 
-@app.exception(Exception)
+@instance.exception(Exception)
 def server_error(request, exception):
     return json(response_wrapper.error(1001), status=500)
 
