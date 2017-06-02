@@ -8,7 +8,7 @@ from tbs import db
 from tbs.lib import exceptions
 from tbs.lib import response_wrapper
 from tbs.lib.stores import topic as topic_store
-from tbs.views import user as topic_view
+from tbs.views import topic as topic_view
 
 
 async def list_topics(request):
@@ -37,8 +37,8 @@ async def create_topic(request):
 async def show_topic(request, id):
     try:
         async with db.pool.acquire() as conn:
-            user = await topic_store.get(conn=conn, id=id)
-            return json(response_wrapper.ok(topic_view.render(user)))
+            topic = await topic_store.get(conn=conn, id=id)
+            return json(response_wrapper.ok(topic_view.render(topic)))
     except exceptions.NotFoundError:
         return json(response_wrapper.error(4001), status=404)
 
@@ -47,8 +47,8 @@ async def update_topic(request, id):
     topic = request.json
 
     async with db.pool.acquire() as conn:
-        user = await topic_store.update(conn=conn, id=id, **topic)
-        return json(response_wrapper.ok(topic_view.render(user)))
+        topic = await topic_store.update(conn=conn, id=id, **topic)
+        return json(response_wrapper.ok(topic_view.render(topic)))
 
 
 async def delete_topic(request, id):
