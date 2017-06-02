@@ -78,20 +78,20 @@ async def update(conn: Connection, id: int, **kwargs):
     """
     query = schema.topics.update().where(schema.topics.c.id == id)
 
-    if 'title' in kwargs:
-        query = query.values(title=kwargs['title'])
+    if "title" in kwargs:
+        query = query.values(title=kwargs["title"])
 
-    if 'slug' in kwargs:
-        query = query.values(slug=kwargs['slug'])
+    if "slug" in kwargs:
+        query = query.values(slug=kwargs["slug"])
 
-    if 'description' in kwargs:
-        query = query.values(description=kwargs['description'])
+    if "description" in kwargs:
+        query = query.values(description=kwargs["description"])
 
-    if 'icon' in kwargs:
-        query = query.values(icon=kwargs['icon'])
+    if "icon" in kwargs:
+        query = query.values(icon=kwargs["icon"])
 
-    if 'is_active' in kwargs:
-        query = query.values(is_active=kwargs['is_active'])
+    if "is_active" in kwargs:
+        query = query.values(is_active=kwargs["is_active"])
 
     query, params = asyncpgsa.compile_query(query)
 

@@ -2,8 +2,8 @@
 The Bestory Project
 """
 
-import time
 import logging
+import time
 
 from tbs.config import snowflake as config
 

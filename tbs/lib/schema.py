@@ -22,10 +22,10 @@ class DateTime(sa.TypeDecorator):
     def process_bind_param(self, value, dialect):
         if value is not None:
             if not isinstance(value, datetime):
-                raise TypeError('Expected datetime.datetime, not ' +
+                raise TypeError("Expected datetime.datetime, not " +
                                 repr(value))
             elif value.tzinfo is None:
-                raise ValueError('Naive datetime is disallowed')
+                raise ValueError("Naive datetime is disallowed")
             return value.astimezone(pendulum.UTC)
 
     def process_result_value(self, value, dialect):

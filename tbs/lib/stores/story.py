@@ -83,28 +83,28 @@ async def update(conn: Connection, id: int, **kwargs):
     """
     query = schema.stories.update().where(schema.stories.c.id == id)
 
-    if 'topic_id' in kwargs:
-        query = query.values(topic_id=kwargs['topic_id'])
+    if "topic_id" in kwargs:
+        query = query.values(topic_id=kwargs["topic_id"])
 
-    if 'content' in kwargs:
+    if "content" in kwargs:
         query = query.values(
-            content=kwargs['content'],
+            content=kwargs["content"],
             edited_date=datetime.utcnow().replace(tzinfo=pendulum.UTC)
         )
 
-    if 'is_published' in kwargs:
-        query = query.values(is_published=kwargs['is_published'])
+    if "is_published" in kwargs:
+        query = query.values(is_published=kwargs["is_published"])
 
-        if kwargs['is_published']:
+        if kwargs["is_published"]:
             query = query.values(
                 published_date=datetime.utcnow().replace(tzinfo=pendulum.UTC)
             )
 
-    if 'is_removed' in kwargs:
-        query = query.values(is_removed=kwargs['is_removed'])
+    if "is_removed" in kwargs:
+        query = query.values(is_removed=kwargs["is_removed"])
 
-    if 'published_date' in kwargs:
-        query = query.values(is_active=kwargs['published_date'])
+    if "published_date" in kwargs:
+        query = query.values(is_active=kwargs["published_date"])
 
     query, params = asyncpgsa.compile_query(query)
 

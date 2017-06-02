@@ -90,14 +90,14 @@ async def update(conn: Connection, id: int, **kwargs) -> Record:
     """
     query = schema.users.update().where(schema.users.c.id == id)
 
-    if 'username' in kwargs:
-        query = query.values(username=kwargs['username'])
+    if "username" in kwargs:
+        query = query.values(username=kwargs["username"])
 
-    if 'email' in kwargs:
-        query = query.values(email=kwargs['email'])
+    if "email" in kwargs:
+        query = query.values(email=kwargs["email"])
 
-    if 'password' in kwargs:
-        query = query.values(password=kwargs['password'])
+    if "password" in kwargs:
+        query = query.values(password=kwargs["password"])
 
     query, params = asyncpgsa.compile_query(query)
 

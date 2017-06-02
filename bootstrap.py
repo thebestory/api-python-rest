@@ -11,7 +11,7 @@ from tbs.config import db as db_config
 from tbs.config import snowflake as snowflake_config
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     host = os.environ.get("HOST")
     port = os.environ.get("PORT")
     db = os.environ.get("DATABASE_URL")
