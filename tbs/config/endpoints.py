@@ -8,8 +8,6 @@ from tbs.controllers import topics as topics_controller
 from tbs.controllers import users as users_controller
 
 
-# username can contains lowercase and uppercase letters, digits,
-# underscore and dash
 users = [
     {
         'path': '/users',
@@ -17,12 +15,12 @@ users = [
         'methods': ['POST']
     },
     {
-        'path': '/users/<username:[a-zA-Z0-9_-]+>',
+        'path': '/users/<id:int>',
         'handler': users_controller.show_user,
         'methods': ['GET']
     },
     {
-        'path': '/users/<username:[a-zA-Z0-9_-]+>',
+        'path': '/users/<id:int>',
         'handler': users_controller.update_user,
         'methods': ['PATCH', 'PUT']
     },
@@ -40,18 +38,22 @@ sessions = [
         'methods': ['POST']
     },
     {
+        'path': '/sessions',
+        'handler': sessions_controller.delete_session,  # delete current session
+        'methods': ['DELETE']
+    },
+    {
         'path': '/sessions/<id:int>',
         'handler': sessions_controller.show_session,
         'methods': ['GET']
     },
     {
-        'path': '/sessions',
-        'handler': sessions_controller.delete_session,  # yes, we can delete only one session, now, not a bug, a feature
+        'path': '/sessions/<id:int>',
+        'handler': sessions_controller.delete_session,
         'methods': ['DELETE']
-    },
+    }
 ]
 
-# topic slug can contains only lowercase letters
 topics = [
     {
         'path': '/topics',
@@ -64,39 +66,39 @@ topics = [
         'methods': ['POST']
     },
     {
-        'path': '/topics/<slug:[a-z]+>',
+        'path': '/topics/<id:int>',
         'handler': topics_controller.show_topic,
         'methods': ['GET']
     },
     {
-        'path': '/topics/<slug:[a-z]+>',
+        'path': '/topics/<id:int>',
         'handler': topics_controller.update_topic,
         'methods': ['PATCH', 'PUT']
     },
     {
-        'path': '/topics/<slug:[a-z]+>',
+        'path': '/topics/<id:int>',
         'handler': topics_controller.delete_topic,
         'methods': ['DELETE']
     },
 
     # stories
     {
-        'path': '/topics/<slug:[a-z]+>/latest',
+        'path': '/topics/<id:int>/latest',
         'handler': topics_controller.list_topic_latest_stories,
         'methods': ['GET']
     },
     {
-        'path': '/topics/<slug:[a-z]+>/hot',
+        'path': '/topics/<id:int>/hot',
         'handler': topics_controller.list_topic_hot_stories,
         'methods': ['GET']
     },
     {
-        'path': '/topics/<slug:[a-z]+>/top',
+        'path': '/topics/<id:int>/top',
         'handler': topics_controller.list_topic_top_stories,
         'methods': ['GET']
     },
     {
-        'path': '/topics/<slug:[a-z]+>/random',
+        'path': '/topics/<id:int>/random',
         'handler': topics_controller.list_topic_random_stories,
         'methods': ['GET']
     },
@@ -124,6 +126,23 @@ stories = [
         'methods': ['DELETE']
     },
 
+    # story reactions
+    {
+        'path': '/stories/<story_id:int>/likes',
+        'handler': stories_controller.list_story_reactions,
+        'methods': ['GET']
+    },
+    {
+        'path': '/stories/<story_id:int>/likes',
+        'handler': stories_controller.create_story_reaction,
+        'methods': ['POST', 'PATCH', 'PUT']
+    },
+    {
+        'path': '/stories/<story_id:int>/likes',
+        'handler': stories_controller.delete_story_reaction,
+        'methods': ['DELETE']
+    },
+
     # story comments
     {
         'path': '/stories/<story_id:int>/comments',
@@ -142,11 +161,6 @@ stories = [
     },
     {
         'path': '/stories/<story_id:int>/comments/<id:int>',
-        'handler': stories_controller.create_story_comment,
-        'methods': ['POST']
-    },
-    {
-        'path': '/stories/<story_id:int>/comments/<id:int>',
         'handler': stories_controller.update_story_comment,
         'methods': ['PATCH', 'PUT']
     },
@@ -156,37 +170,20 @@ stories = [
         'methods': ['DELETE']
     },
 
-    # story likes
-    {
-        'path': '/stories/<story_id:int>/likes',
-        'handler': stories_controller.list_story_likes,
-        'methods': ['GET']
-    },
-    {
-        'path': '/stories/<story_id:int>/likes',
-        'handler': stories_controller.create_story_like,
-        'methods': ['POST', 'PATCH', 'PUT']
-    },
-    {
-        'path': '/stories/<story_id:int>/likes',
-        'handler': stories_controller.delete_story_like,
-        'methods': ['DELETE']
-    },
-
-    # story comment likes
+    # story comment reactions
     {
         'path': '/stories/<story_id:int>/comments/<comment_id:int>/likes',
-        'handler': stories_controller.list_story_comment_likes,
+        'handler': stories_controller.list_story_comment_reactions,
         'methods': ['GET']
     },
     {
         'path': '/stories/<story_id:int>/comments/<comment_id:int>/likes',
-        'handler': stories_controller.create_story_comment_like,
+        'handler': stories_controller.create_story_comment_reaction,
         'methods': ['POST', 'PATCH', 'PUT']
     },
     {
         'path': '/stories/<story_id:int>/comments/<comment_id:int>/likes',
-        'handler': stories_controller.delete_story_comment_like,
+        'handler': stories_controller.delete_story_comment_reaction,
         'methods': ['DELETE']
     },
 ]
