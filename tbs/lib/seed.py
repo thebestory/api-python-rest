@@ -6,6 +6,7 @@ from asyncpg.connection import Connection
 
 from tbs.lib.stores import user as user_store
 from tbs.lib.stores import topic as topic_store
+from tbs.lib.stores import story as story_store
 
 
 users = [
@@ -17,17 +18,17 @@ users = [
 ]
 
 topics = [
-    {'title': 'Weird', 'slug': 'weird', 'icon': '9406QtVe637', 'is_active': True, 'description': 'All of us are weird, but there might be someone, whose story will make your eyes pop out. Check it out right now!'},
-    {'title': 'Love', 'slug': 'love', 'icon': '8utqsEYq596', 'is_active': True, 'description': 'Do you have doubts about love existence? We can assure you it does exist. Check out the evidence of it in the touching stories of our members!'},
-    {'title': 'Funny', 'slug': 'funny', 'icon': 'c407w1H03A0', 'is_active': True, 'description': 'We all know that everyone loves to laugh. So, why would you restrain yourselves from it? Enjoy hilarious moments from our subscribers lives.'},
-    {'title': 'Intimate', 'slug': 'intimate', 'icon': 'cWiepIBqmtJ', 'is_active': True, 'description': 'Some say sex brings people together. Now it\'s time to test this statement and read a couple of hot stories from our members.'},
-    {'title': 'Happiness', 'slug': 'happiness', 'icon': '9ilbmJGoCFr', 'is_active': True, 'description': 'Here you will see what (pushes us forward) and makes us try again. What makes our life meaningful. The moments when we are endlessly happy.'},
-    {'title': 'Lifehack', 'slug': 'lifehack', 'icon': 'c00fM2X0Iw1', 'is_active': True, 'description': 'We guess you could not even imagine that there is (an easier approach to some problems)such an easy and satisfying way to do it. Here our members will share it with you!'},
-    {'title': 'Good', 'slug': 'gooddeeds', 'icon': 'd7wmKsG0iQe', 'is_active': True, 'description': 'There are tons of great people in the world around us, even if it is hard to see. Read some of these stories and restore your perhaps lost faith in humanity.'},
-    {'title': 'Dreams', 'slug': 'dreams', 'icon': '9kBiF8KM3L2', 'is_active': True, 'description': 'What can you see, feel or do while you are asleep? Anything you have ever thought about and beyond that. Find out what others dreams are like!'},
-    {'title': 'Scary', 'slug': 'scary', 'icon': 'c407w1K03A0', 'is_active': True, 'description': 'Sometimes our life isn’t as good as we\'d like it to be. Moreover, there are certain moments when we are petrified. Read these stories about such situations, if you dare.'},
-    {'title': 'Sad', 'slug': 'sad', 'icon': 'c407w1H03M0', 'is_active': True, 'description': 'If you feel down or it is too early for you to move on, check our users stories who are in the same boat with you.'},
-    {'title': 'Daydreams', 'slug': 'daydreams', 'icon': 'c6ZblE$m3o5', 'is_active': True, 'description': 'You probably need just a little push to become greater than you are now. Maybe some of these stories will help you to pursue your own dreams.'}
+    {'title': 'Weird', 'slug': 'weird', 'icon': '9406QtVe637', 'description': 'All of us are weird, but there might be someone, whose story will make your eyes pop out. Check it out right now!'},
+    {'title': 'Love', 'slug': 'love', 'icon': '8utqsEYq596', 'description': 'Do you have doubts about love existence? We can assure you it does exist. Check out the evidence of it in the touching stories of our members!'},
+    {'title': 'Funny', 'slug': 'funny', 'icon': 'c407w1H03A0', 'description': 'We all know that everyone loves to laugh. So, why would you restrain yourselves from it? Enjoy hilarious moments from our subscribers lives.'},
+    {'title': 'Intimate', 'slug': 'intimate', 'icon': 'cWiepIBqmtJ', 'description': 'Some say sex brings people together. Now it\'s time to test this statement and read a couple of hot stories from our members.'},
+    {'title': 'Happiness', 'slug': 'happiness', 'icon': '9ilbmJGoCFr', 'description': 'Here you will see what (pushes us forward) and makes us try again. What makes our life meaningful. The moments when we are endlessly happy.'},
+    {'title': 'Lifehack', 'slug': 'lifehack', 'icon': 'c00fM2X0Iw1', 'description': 'We guess you could not even imagine that there is (an easier approach to some problems)such an easy and satisfying way to do it. Here our members will share it with you!'},
+    {'title': 'Good', 'slug': 'gooddeeds', 'icon': 'd7wmKsG0iQe', 'description': 'There are tons of great people in the world around us, even if it is hard to see. Read some of these stories and restore your perhaps lost faith in humanity.'},
+    {'title': 'Dreams', 'slug': 'dreams', 'icon': '9kBiF8KM3L2', 'description': 'What can you see, feel or do while you are asleep? Anything you have ever thought about and beyond that. Find out what others dreams are like!'},
+    {'title': 'Scary', 'slug': 'scary', 'icon': 'c407w1K03A0', 'description': 'Sometimes our life isn’t as good as we\'d like it to be. Moreover, there are certain moments when we are petrified. Read these stories about such situations, if you dare.'},
+    {'title': 'Sad', 'slug': 'sad', 'icon': 'c407w1H03M0', 'description': 'If you feel down or it is too early for you to move on, check our users stories who are in the same boat with you.'},
+    {'title': 'Daydreams', 'slug': 'daydreams', 'icon': 'c6ZblE$m3o5', 'description': 'You probably need just a little push to become greater than you are now. Maybe some of these stories will help you to pursue your own dreams.'}
 ]
 
 stories = [
@@ -83,12 +84,25 @@ async def insert_topics(conn: Connection):
             slug=topic['slug'],
             description=topic['description'],
             icon=topic['icon'],
-            is_active=topic['is_active']
+            is_active=True
         )
 
 
 async def insert_stories(conn: Connection):
-    pass
+    for story in stories:
+        author = await user_store.get_by_username(
+            conn=conn,
+            username=story['author']
+        )
+        topic = await topic_store.get_by_slug(conn=conn, slug=story['topic'])
+
+        await story_store.create(
+            conn=conn,
+            author_id=author['id'],
+            topic_id=topic['id'],
+            content=story['content'],
+            is_published=True
+        )
 
 
 async def insert(conn: Connection):
