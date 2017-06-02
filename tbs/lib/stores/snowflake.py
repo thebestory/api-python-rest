@@ -44,4 +44,4 @@ async def create(conn: Connection, type: str) -> Record:
     )
 
     await conn.execute(query, *params)
-    return await get(id=id, conn=conn)
+    return await get(conn=conn, id=id)
