@@ -7,6 +7,7 @@ from asyncpg.connection import Connection
 from asyncpg.protocol import Record
 
 from tbs import snowflake_generator
+from tbs.lib import exceptions
 from tbs.lib import schema
 
 
@@ -25,7 +26,7 @@ async def get(conn: Connection, id: int) -> Record:
     snowflake = await conn.fetchrow(query, *params)
 
     if not snowflake:
-        raise ValueError
+        raise exceptions.NotFoundError
 
     return snowflake
 

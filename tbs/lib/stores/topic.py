@@ -6,6 +6,7 @@ import asyncpgsa
 from asyncpg.connection import Connection
 from asyncpg.protocol import Record
 
+from tbs.lib import exceptions
 from tbs.lib import schema
 from tbs.lib.stores import snowflake as snowflake_store
 
@@ -24,7 +25,7 @@ async def get(conn: Connection, id: int) -> Record:
     topic = await conn.fetchrow(query, *params)
 
     if not topic:
-        raise ValueError
+        raise exceptions.NotFoundError
 
     return topic
 
@@ -40,7 +41,7 @@ async def get_by_slug(conn: Connection, slug: str) -> Record:
     topic = await conn.fetchrow(query, *params)
 
     if not topic:
-        raise ValueError
+        raise exceptions.NotFoundError
 
     return topic
 

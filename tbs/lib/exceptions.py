@@ -9,3 +9,11 @@ class TheBestoryError(Exception):
 
 class ValidationError(TheBestoryError, ValueError):
     pass
+
+
+class NotFoundError(TheBestoryError):
+    pass
+
+
+class NotCreatedError(TheBestoryError):
+    pass

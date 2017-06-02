@@ -6,6 +6,7 @@ import asyncpgsa
 from asyncpg.connection import Connection
 from asyncpg.protocol import Record
 
+from tbs.lib import exceptions
 from tbs.lib import schema
 from tbs.lib.stores import snowflake as snowflake_store
 
@@ -24,7 +25,7 @@ async def get(conn: Connection, id: int) -> Record:
     user = await conn.fetchrow(query, *params)
 
     if not user:
-        raise ValueError
+        raise exceptions.NotFoundError
 
     return user
 
@@ -40,7 +41,7 @@ async def get_by_username(conn: Connection, username: str) -> Record:
     user = await conn.fetchrow(query, *params)
 
     if not user:
-        raise ValueError
+        raise exceptions.NotFoundError
 
     return user
 
@@ -56,7 +57,7 @@ async def get_by_email(conn: Connection, email: str) -> Record:
     user = await conn.fetchrow(query, *params)
 
     if not user:
-        raise ValueError
+        raise exceptions.NotFoundError
 
     return user
 
@@ -80,8 +81,11 @@ async def create(conn: Connection,
             )
         )
 
-        await conn.execute(query, *params)
-        return await get(conn=conn, id=snowflake["id"])
+        try:
+            await conn.execute(query, *params)
+            return await get(conn=conn, id=snowflake["id"])
+        except:
+            raise exceptions.NotCreatedError
 
 
 async def update(conn: Connection, id: int, **kwargs) -> Record:

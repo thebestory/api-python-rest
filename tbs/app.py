@@ -3,9 +3,11 @@ The Bestory Project
 """
 
 from sanic import Sanic
+from sanic.response import json
 
 from tbs.config import endpoints
 from tbs.config import listeners
+from tbs.lib import response_wrapper
 
 
 instance = Sanic()
@@ -43,6 +45,11 @@ async def before_stop(app, loop):
 @instance.listener("after_server_stop")
 async def after_stop(app, loop):
     await invoke_listeners(app, loop, listeners.after_stop)
+
+
+@app.exception(Exception)
+def server_error(request, exception):
+    return json(response_wrapper.error(1001), status=500)
 
 
 add_routes(instance)

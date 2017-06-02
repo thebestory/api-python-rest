@@ -10,6 +10,7 @@ import pendulum
 from asyncpg.connection import Connection
 from asyncpg.protocol import Record
 
+from tbs.lib import exceptions
 from tbs.lib import schema
 from tbs.lib.stores import snowflake as snowflake_store
 from tbs.lib.stores import user as user_store
@@ -30,7 +31,7 @@ async def get(conn: Connection, id: int) -> Record:
     story = await conn.fetchrow(query, *params)
 
     if not story:
-        raise ValueError
+        raise exceptions.NotFoundError
 
     return story
 
