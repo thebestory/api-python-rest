@@ -19,7 +19,6 @@ async def list(conn: Connection, non_active: bool=False) -> Record:
     List all topics.
     """
     query = schema.topics.select() \
-        .where(schema.topics.c.id == id) \
         .order_by(schema.topics.c.title)
 
     if not non_active:
