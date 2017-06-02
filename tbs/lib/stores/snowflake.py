@@ -13,7 +13,7 @@ from tbs.lib import schema
 SNOWFLAKE_TYPE = "id"
 
 
-async def get(id: int, conn: Connection) -> Record:
+async def get(conn: Connection, id: int) -> Record:
     """
     Get a single Snowflake ID.
     """
@@ -30,7 +30,7 @@ async def get(id: int, conn: Connection) -> Record:
     return snowflake
 
 
-async def create(type: str, conn: Connection) -> Record:
+async def create(conn: Connection, type: str) -> Record:
     """
     Create a new Snowflake ID.
     """

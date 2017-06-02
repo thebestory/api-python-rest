@@ -66,7 +66,12 @@ stories = [
 
 async def insert_users(conn: Connection):
     for user in users:
-        await user_store.create(**user, conn=conn)
+        await user_store.create(
+            conn=conn,
+            username=user['username'],
+            email=user['email'],
+            password=user['password']
+        )
 
 
 async def insert_topics(conn: Connection):

@@ -2,9 +2,14 @@
 The Bestory Project
 """
 
+from datetime import datetime
+from typing import Optional
+
 from asyncpg.connection import Connection
 from asyncpg.protocol import Record
 import asyncpgsa
+
+import pendulum
 
 from tbs.lib import schema
 from tbs.lib.stores import snowflake as snowflake_store
@@ -30,13 +35,20 @@ async def get(id: int, conn: Connection) -> Record:
     return user
 
 
-async def create(username: str,
+async def create(conn: Connection,
+                 username: str,
                  email: str,
                  password: str,
-                 conn: Connection) -> Record:
+                 comments_count: int=0,
+                 comment_reactions_count: int=0,
+                 story_reactions_count: int=0,
+                 stories_count: int=0,
+                 registered_date: Optional[datetime]=None) -> Record:
     """
     Create a new user.
     """
+    if registered_date is None:
+        registered_date = datetime.utcnow().replace(tzinfo=pendulum.UTC)
 
     async with conn.transaction():
         snowflake = await snowflake_store.create(type=SNOWFLAKE_TYPE, conn=conn)
@@ -46,7 +58,12 @@ async def create(username: str,
                 id=snowflake["id"],
                 username=username,
                 email=email,
-                password=password
+                password=password,
+                comments_count=comments_count,
+                comment_reactions_count=comment_reactions_count,
+                story_reactions_count=story_reactions_count,
+                stories_count=stories_count,
+                registered_date=registered_date
             )
         )
 
