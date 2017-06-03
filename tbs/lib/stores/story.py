@@ -68,24 +68,25 @@ def __list_prepare(topics: List[int]=None,
     include_inactive_topics |= only_inactive_topics
 
     __to_select = [schema.stories]
+    __from_select = schema.stories
+
     if preload_author:
         __to_select.append(schema.users)
-    if preload_topic:
-        __to_select.append(schema.topics)
-
-    query = select(__to_select).limit(limit).apply_labels()
-
-    if preload_author:
-        query = query.join(
+        __from_select = __from_select.join(
             schema.users,
             schema.users.c.id == schema.stories.c.author_id
         )
-
     if preload_topic:
-        query = query.join(
+        __to_select.append(schema.topics)
+        __from_select = __from_select.join(
             schema.topics,
             schema.topics.c.id == schema.stories.c.topic_id
         )
+
+    query = select(__to_select) \
+        .select_from(__from_select) \
+        .limit(limit) \
+        .apply_labels()
 
     if topics is None or len(topics) == 0:
         inverse_topics = True
