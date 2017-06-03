@@ -31,7 +31,7 @@ async def create_session(request):
 
             if password.verify(credentials["password"], user["password"]):
                 return json(response_wrapper.ok(session_view.render(
-                    session.create(user)
+                    await session.create(user)
                 )))
         except exceptions.NotFoundError:
             return json(response_wrapper.error(2004), status=400)
