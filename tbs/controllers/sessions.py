@@ -16,7 +16,7 @@ from tbs.views import session as session_view
 
 
 async def list_sessions(request):
-    return json(response_wrapper.error(2003), code=403)
+    return json(response_wrapper.error(2003), status=403)
 
 
 async def create_session(request):
@@ -38,11 +38,11 @@ async def create_session(request):
 
 
 async def show_session(request, id):
-    return json(response_wrapper.error(2003), code=403)
+    return json(response_wrapper.error(2003), status=403)
 
 
 async def delete_session(request, id=None):
     if id is not None:
-        return json(response_wrapper.error(2003), code=403)
+        return json(response_wrapper.error(2003), status=403)
 
-    return json(response_wrapper.ok(None), code=204)
+    return json(response_wrapper.ok(None), status=204)
