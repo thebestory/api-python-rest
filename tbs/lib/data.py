@@ -17,7 +17,7 @@ def parse(table: sa.Table, record: Record, prefix=""):
     object = {column.key: None for column in table.columns}
 
     for key in object:
-        if key in record:
+        if prefix + key in record:
             object[key] = record[prefix + key]
 
     return object
