@@ -51,7 +51,7 @@ class Listing:
         Returns validated ID.
         """
         if isinstance(id, str):
-            limit = int(id)
+            id = int(id)
 
         if 0 <= id:
             return id
