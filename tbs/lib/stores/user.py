@@ -6,8 +6,10 @@ import asyncpgsa
 from asyncpg.connection import Connection
 from asyncpg.protocol import Record
 
-from tbs.lib import exceptions
-from tbs.lib import schema
+from tbs.lib import (
+    exceptions,
+    schema
+)
 from tbs.lib.stores import snowflake as snowflake_store
 
 

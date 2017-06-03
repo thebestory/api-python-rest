@@ -1,5 +1,6 @@
-sanic==0.5.4
 asyncpg==0.11.0
-sqlalchemy==1.1.10
 asyncpgsa==0.11.0
+passlib
 pendulum==1.2.1
+sanic==0.5.4
+sqlalchemy==1.1.10

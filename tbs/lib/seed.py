@@ -4,6 +4,7 @@ The Bestory Project
 
 from asyncpg.connection import Connection
 
+from tbs.lib import password
 from tbs.lib.stores import user as user_store
 from tbs.lib.stores import topic as topic_store
 from tbs.lib.stores import story as story_store
@@ -72,7 +73,7 @@ async def insert_users(conn: Connection):
             conn=conn,
             username=user['username'],
             email=user['email'],
-            password=user['password']
+            password=password.hash(user['password'])
         )
 
 
