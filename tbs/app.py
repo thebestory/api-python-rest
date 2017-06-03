@@ -16,7 +16,7 @@ from tbs.lib import response_wrapper
 instance = Sanic()
 
 
-async def add_listeners(type: str):
+def add_listeners(type: str):
     st = "_server_".join(type.split("_"))
 
     for listener in listeners.all[type]:
@@ -25,7 +25,7 @@ async def add_listeners(type: str):
             return await listener(app, loop)
 
 
-async def add_middleware(type: str):
+def add_middleware(type: str):
     for mw in middleware.all[type]:
         if type == "request":
             @instance.middleware(type)
