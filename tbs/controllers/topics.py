@@ -11,14 +11,18 @@ from tbs.lib import (
     response_wrapper
 )
 from tbs.lib.stores import topic as topic_store
+from tbs.lib.stores import story as story_store
 from tbs.views import topic as topic_view
+from tbs.views import story as story_view
 
 
 async def list_topics(request):
     async with db.pool.acquire() as conn:
         topics = await topic_store.list(conn=conn)
-        topics = [topic_view.render(topic) for topic in topics]
-        return json(response_wrapper.ok(topics))
+
+        return json(response_wrapper.ok(
+            topic_view.render(topic) for topic in topics
+        ))
 
 
 @helpers.login_required
@@ -67,16 +71,83 @@ async def delete_topic(request, id):
 
 
 async def list_topic_latest_stories(request, id):
-    return json({"hello": "world"})
+    async with db.pool.acquire() as conn:
+        if id != 0:
+            try:
+                await topic_store.get(conn=conn, id=id)
+            except exceptions.NotFoundError:
+                return json(response_wrapper.error(4002), status=404)
 
+        topics = [] if id == 0 else [id]
+
+        stories = await story_store.list_latest(
+            conn=conn,
+            topics=topics
+        )
+
+        return json(response_wrapper.ok([
+            story_view.render(story, story["author"], story["topic"])
+            for story in stories
+        ]))
 
 async def list_topic_hot_stories(request, id):
-    return json({"hello": "world"})
+    async with db.pool.acquire() as conn:
+        if id != 0:
+            try:
+                await topic_store.get(conn=conn, id=id)
+            except exceptions.NotFoundError:
+                return json(response_wrapper.error(4002), status=404)
+
+        topics = [] if id == 0 else [id]
+
+        stories = await story_store.list_hot(
+            conn=conn,
+            topics=topics
+        )
+
+        return json(response_wrapper.ok([
+            story_view.render(story, story["author"], story["topic"])
+            for story in stories
+        ]))
 
 
 async def list_topic_top_stories(request, id):
-    return json({"hello": "world"})
+    async with db.pool.acquire() as conn:
+        if id != 0:
+            try:
+                await topic_store.get(conn=conn, id=id)
+            except exceptions.NotFoundError:
+                return json(response_wrapper.error(4002), status=404)
+
+        topics = [] if id == 0 else [id]
+
+        stories = await story_store.list_top(
+            conn=conn,
+            topics=topics
+        )
+
+        return json(response_wrapper.ok([
+            story_view.render(story, story["author"], story["topic"])
+            for story in stories
+        ]))
 
 
 async def list_topic_random_stories(request, id):
-    return json({"hello": "world"})
+    async with db.pool.acquire() as conn:
+        if id != 0:
+            try:
+                await topic_store.get(conn=conn, id=id)
+            except exceptions.NotFoundError:
+                return json(response_wrapper.error(4002), status=404)
+
+        topics = [] if id == 0 else [id]
+
+        stories = await story_store.list_random(
+            conn=conn,
+            topics=topics
+        )
+
+        return json(response_wrapper.ok([
+            story_view.render(story, story["author"], story["topic"])
+            for story in stories
+        ]))

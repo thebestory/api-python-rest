@@ -9,6 +9,7 @@ import asyncpgsa
 import pendulum
 from asyncpg.connection import Connection
 from asyncpg.exceptions import PostgresError
+from sqlalchemy.sql import select
 from sqlalchemy.sql.expression import func
 
 from tbs.lib import (
@@ -25,25 +26,27 @@ from tbs.lib.validators import story as validators
 SNOWFLAKE_TYPE = "story"
 
 
-def __list(topics: List[int]=None,
-           inverse_topics: bool=False,
-           authors: List[int]=None,
-           inverse_authors: bool=False,
-           submitted_date_before: datetime=None,
-           submitted_date_after: datetime=None,
-           published_date_before: datetime=None,
-           published_date_after: datetime=None,
-           edited_date_before: datetime=None,
-           edited_date_after: datetime=None,
-           limit: int=25,
-           include_unpublished: bool=False,
-           only_unpublished: bool=False,
-           include_removed: bool=False,
-           only_removed: bool=False,
-           include_edited: bool=True,
-           only_edited: bool=False,
-           preload_user: bool=True,
-           preload_topic: bool=True):
+def __list_prepare(topics: List[int]=None,
+                   inverse_topics: bool=False,
+                   authors: List[int]=None,
+                   inverse_authors: bool=False,
+                   submitted_date_before: datetime=None,
+                   submitted_date_after: datetime=None,
+                   published_date_before: datetime=None,
+                   published_date_after: datetime=None,
+                   edited_date_before: datetime=None,
+                   edited_date_after: datetime=None,
+                   limit: int=25,
+                   include_unpublished: bool=False,
+                   only_unpublished: bool=False,
+                   include_removed: bool=False,
+                   only_removed: bool=False,
+                   include_edited: bool=True,
+                   only_edited: bool=False,
+                   include_inactive_topics: bool=False,  # works only when inverse_topics is True
+                   only_inactive_topics: bool=False,  # works only when inverse_topics is True
+                   preload_author: bool=True,
+                   preload_topic: bool=True):
     """
     List stories.
     """
@@ -62,22 +65,32 @@ def __list(topics: List[int]=None,
     include_unpublished |= only_unpublished
     include_removed |= only_removed
     include_edited |= only_edited
+    include_inactive_topics |= only_inactive_topics
 
-    query = schema.stories.select().limit(limit)
+    __to_select = [schema.stories]
+    if preload_author:
+        __to_select.append(schema.users)
+    if preload_topic:
+        __to_select.append(schema.topics)
 
-    if topics is None:
-        inverse_topics = True  # only for understanding
+    query = select(__to_select).limit(limit).apply_labels()
+
+    if topics is None or len(topics) == 0:
+        inverse_topics = True
     elif inverse_topics:
         query = query.where(~schema.stories.c.topic_id.in_(topics))
     else:
         query = query.where(schema.stories.c.topic_id.in_(topics))
 
     if authors is None:
-        inverse_authors = True  # only for understanding
+        inverse_authors = True
     elif inverse_authors:
         query = query.where(~schema.stories.c.author_id.in_(authors))
     else:
         query = query.where(schema.stories.c.author_id.in_(authors))
+
+    include_inactive_topics &= inverse_topics
+    only_inactive_topics &= inverse_topics
 
     if submitted_date_before:
         query = query.where(
@@ -112,6 +125,8 @@ def __list(topics: List[int]=None,
         query = query.where(schema.stories.c.is_removed == False)
     if not include_edited:
         query = query.where(schema.stories.c.edited_date == None)
+    if not include_inactive_topics:
+        query = query.where(schema.topics.c.is_active == True)
 
     if only_unpublished:
         query = query.where(schema.stories.c.is_published == False)
@@ -119,8 +134,34 @@ def __list(topics: List[int]=None,
         query = query.where(schema.stories.c.is_removed == True)
     if only_edited:
         query = query.where(schema.stories.c.edited_date != None)
+    if only_inactive_topics:
+        query = query.where(schema.topics.c.is_active == False)
 
     return query
+
+
+async def __list_fetch(conn: Connection,
+                       query,
+                       preload_author: bool,
+                       preload_topic: bool):
+    query, params = asyncpgsa.compile_query(query)
+
+    try:
+        dataset = await conn.fetch(query, *params)
+    except PostgresError:
+        raise exceptions.NotFetchedError
+
+    _ = data.parse_stories(dataset, prefix="stories_")
+
+    if preload_author:
+        for story, row in zip(_, dataset):
+            story["author"] = data.parse_user(row, prefix="users_")
+
+    if preload_topic:
+        for story, row in zip(_, dataset):
+            story["topic"] = data.parse_topic(row, prefix="topics_")
+
+    return _
 
 
 async def list_latest(conn: Connection,
@@ -141,39 +182,42 @@ async def list_latest(conn: Connection,
                       only_removed: bool=False,
                       include_edited: bool=True,
                       only_edited: bool=False,
-                      preload_user: bool=True,
+                      include_inactive_topics: bool=False,
+                      only_inactive_topics: bool=False,
+                      preload_author: bool=True,
                       preload_topic: bool=True) -> list:
-    query = __list(topics,
-                   inverse_topics,
-                   authors,
-                   inverse_authors,
-                   submitted_date_before,
-                   submitted_date_after,
-                   published_date_before,
-                   published_date_after,
-                   edited_date_before,
-                   edited_date_after,
-                   limit,
-                   include_unpublished,
-                   only_unpublished,
-                   include_removed,
-                   only_removed,
-                   include_edited,
-                   only_edited,
-                   preload_user,
-                   preload_topic)
+    query = __list_prepare(
+        topics=topics,
+        inverse_topics=inverse_topics,
+        authors=authors,
+        inverse_authors=inverse_authors,
+        submitted_date_before=submitted_date_before,
+        submitted_date_after=submitted_date_after,
+        published_date_before=published_date_before,
+        published_date_after=published_date_after,
+        edited_date_before=edited_date_before,
+        edited_date_after=edited_date_after,
+        limit=limit,
+        include_unpublished=include_unpublished,
+        only_unpublished=only_unpublished,
+        include_removed=include_removed,
+        only_removed=only_removed,
+        include_edited=include_edited,
+        only_edited=only_edited,
+        include_inactive_topics=include_inactive_topics,
+        only_inactive_topics=only_inactive_topics,
+        preload_author=preload_author,
+        preload_topic=preload_topic
+    )
 
     query = query.order_by(schema.stories.c.published_date.desc())
 
-    query, params = asyncpgsa.compile_query(query)
-
-    try:
-        stories = await conn.fetch(query, *params)
-    except PostgresError:
-        raise exceptions.NotFetchedError
-
-    return data.parse_stories(stories)
-
+    return await __list_fetch(
+        conn=conn,
+        query=query,
+        preload_author=preload_author,
+        preload_topic=preload_topic
+    )
 
 async def list_top(conn: Connection,
                    topics: List[int]=None,
@@ -193,39 +237,43 @@ async def list_top(conn: Connection,
                    only_removed: bool=False,
                    include_edited: bool=True,
                    only_edited: bool=False,
-                   preload_user: bool=True,
+                   include_inactive_topics: bool=False,
+                   only_inactive_topics: bool=False,
+                   preload_author: bool=True,
                    preload_topic: bool=True) -> list:
-    query = __list(topics,
-                   inverse_topics,
-                   authors,
-                   inverse_authors,
-                   submitted_date_before,
-                   submitted_date_after,
-                   published_date_before,
-                   published_date_after,
-                   edited_date_before,
-                   edited_date_after,
-                   limit,
-                   include_unpublished,
-                   only_unpublished,
-                   include_removed,
-                   only_removed,
-                   include_edited,
-                   only_edited,
-                   preload_user,
-                   preload_topic)
+    query = __list_prepare(
+        topics=topics,
+        inverse_topics=inverse_topics,
+        authors=authors,
+        inverse_authors=inverse_authors,
+        submitted_date_before=submitted_date_before,
+        submitted_date_after=submitted_date_after,
+        published_date_before=published_date_before,
+        published_date_after=published_date_after,
+        edited_date_before=edited_date_before,
+        edited_date_after=edited_date_after,
+        limit=limit,
+        include_unpublished=include_unpublished,
+        only_unpublished=only_unpublished,
+        include_removed=include_removed,
+        only_removed=only_removed,
+        include_edited=include_edited,
+        only_edited=only_edited,
+        include_inactive_topics=include_inactive_topics,
+        only_inactive_topics=only_inactive_topics,
+        preload_author=preload_author,
+        preload_topic=preload_topic
+    )
 
     query = query.order_by(schema.stories.c.reactions_count.desc())
     query = query.order_by(schema.stories.c.published_date.desc())
 
-    query, params = asyncpgsa.compile_query(query)
-
-    try:
-        stories = await conn.fetch(query, *params)
-    except PostgresError:
-        raise exceptions.NotFetchedError
-
-    return data.parse_stories(stories)
+    return await __list_fetch(
+        conn=conn,
+        query=query,
+        preload_author=preload_author,
+        preload_topic=preload_topic
+    )
 
 
 async def list_random(conn: Connection,
@@ -246,38 +294,42 @@ async def list_random(conn: Connection,
                       only_removed: bool=False,
                       include_edited: bool=True,
                       only_edited: bool=False,
-                      preload_user: bool=True,
+                      include_inactive_topics: bool=False,
+                      only_inactive_topics: bool=False,
+                      preload_author: bool=True,
                       preload_topic: bool=True) -> list:
-    query = __list(topics,
-                   inverse_topics,
-                   authors,
-                   inverse_authors,
-                   submitted_date_before,
-                   submitted_date_after,
-                   published_date_before,
-                   published_date_after,
-                   edited_date_before,
-                   edited_date_after,
-                   limit,
-                   include_unpublished,
-                   only_unpublished,
-                   include_removed,
-                   only_removed,
-                   include_edited,
-                   only_edited,
-                   preload_user,
-                   preload_topic)
+    query = __list_prepare(
+        topics=topics,
+        inverse_topics=inverse_topics,
+        authors=authors,
+        inverse_authors=inverse_authors,
+        submitted_date_before=submitted_date_before,
+        submitted_date_after=submitted_date_after,
+        published_date_before=published_date_before,
+        published_date_after=published_date_after,
+        edited_date_before=edited_date_before,
+        edited_date_after=edited_date_after,
+        limit=limit,
+        include_unpublished=include_unpublished,
+        only_unpublished=only_unpublished,
+        include_removed=include_removed,
+        only_removed=only_removed,
+        include_edited=include_edited,
+        only_edited=only_edited,
+        include_inactive_topics=include_inactive_topics,
+        only_inactive_topics=only_inactive_topics,
+        preload_author=preload_author,
+        preload_topic=preload_topic
+    )
 
     query = query.order_by(func.random())
 
-    query, params = asyncpgsa.compile_query(query)
-
-    try:
-        stories = await conn.fetch(query, *params)
-    except PostgresError:
-        raise exceptions.NotFetchedError
-
-    return data.parse_stories(stories)
+    return await __list_fetch(
+        conn=conn,
+        query=query,
+        preload_author=preload_author,
+        preload_topic=preload_topic
+    )
 
 
 list_hot = list_top
