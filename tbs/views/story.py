@@ -14,7 +14,7 @@ def render(story, author, topic=None):
         "content": story["content"],
         "comments_count": story["comments_count"],
         "likes_count": story["reactions_count"],
-        "is_liked": story.get("is_liked", False),
+        "is_liked": False,
         "is_published": story["is_published"],
         "is_removed": story["is_removed"],
         "submitted_date": story["submitted_date"].isoformat(),
