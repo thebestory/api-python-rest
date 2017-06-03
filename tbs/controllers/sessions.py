@@ -4,18 +4,45 @@ The Bestory Project
 
 from sanic.response import json
 
+from tbs import db
+from tbs.lib import (
+    exceptions,
+    password,
+    response_wrapper,
+    session
+)
+from tbs.lib.stores import user as user_store
+from tbs.views import session as session_view
+
 
 async def list_sessions(request):
-    return json({"hello": "world"})
+    return json(response_wrapper.error(2003), code=403)
 
 
 async def create_session(request):
-    return json({"hello": "world"})
+    credentials = request.json
+
+    async with db.pool.acquire() as conn:
+        try:
+            user = await user_store.get_by_username(
+                conn=conn,
+                username=credentials["username"]
+            )
+
+            if password.verify(credentials["password"], user["password"]):
+                return json(response_wrapper.ok(session_view.render(
+                    session.create(user)
+                )))
+        except exceptions.NotFoundError:
+            return json(response_wrapper.error(2004), status=400)
 
 
 async def show_session(request, id):
-    return json({"hello": "world"})
+    return json(response_wrapper.error(2003), code=403)
 
 
 async def delete_session(request, id=None):
-    return json({"hello": "world"})
+    if id is not None:
+        return json(response_wrapper.error(2003), code=403)
+
+    return json(response_wrapper.ok(None), code=204)

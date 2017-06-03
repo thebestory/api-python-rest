@@ -2,5 +2,6 @@ asyncpg==0.11.0
 asyncpgsa==0.11.0
 passlib[argon2,bcrypt]
 pendulum==1.2.1
+python-jose
 sanic==0.5.4
 sqlalchemy==1.1.10

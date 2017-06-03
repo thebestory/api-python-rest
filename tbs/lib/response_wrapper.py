@@ -14,6 +14,7 @@ ERROR = {
     2001: "Too many requests",
     2002: "Unauthorized",
     2003: "Insufficient permission",
+    2004: "Login failed",
 
     # Listing and method limits errors
     3001: "Incorrect listing request",
