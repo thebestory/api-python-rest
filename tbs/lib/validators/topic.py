@@ -10,7 +10,7 @@ from tbs.lib import exceptions
 def validate_title(title: str):
     assert isinstance(title, str)
 
-    if 0 < len(title) <= 64:
+    if not 0 < len(title) <= 64:
         raise exceptions.ValidationError("Title length must be between 1 and "
                                          "64")
 
@@ -22,7 +22,7 @@ def validate_slug(slug: str):
         raise exceptions.ValidationError("Slug must contains only a-z letters "
                                          "and digits, and starts with letter")
 
-    if 0 < len(slug) <= 32:
+    if not 0 < len(slug) <= 32:
         raise exceptions.ValidationError("Slug length must be between 1 and "
                                          "32")
 
@@ -38,7 +38,7 @@ def validate_icon(icon: str):
         raise exceptions.ValidationError("Icon hash must contains only a-z "
                                          "letters and digits")
 
-    if 0 < len(icon) <= 16:
+    if not 0 < len(icon) <= 16:
         raise exceptions.ValidationError("Icon hash length must be between 1 "
                                          "and 32")
 

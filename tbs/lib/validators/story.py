@@ -21,7 +21,7 @@ def validate_topic_id(topic_id: Optional[int]):
 def validate_content(content: str):
     assert isinstance(content, str)
 
-    if 0 < len(content) <= 8192:
+    if not 0 < len(content) <= 8192:
         raise exceptions.ValidationError("Content length must be between 1 "
                                          "and 8192")
 
