@@ -23,7 +23,7 @@ async def create_user(request):
             conn=conn,
             username=user["username"],
             email=user["email"],
-            password=password.hash(user["password"])
+            password_=user["password"]
         )
 
         return json(response_wrapper.ok(user_view.render(user)))

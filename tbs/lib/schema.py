@@ -8,7 +8,7 @@ import pendulum
 import sqlalchemy as sa
 
 
-METADATA = sa.MetaData()
+__metadata = sa.MetaData()
 
 
 class DateTime(sa.TypeDecorator):
@@ -36,7 +36,7 @@ class DateTime(sa.TypeDecorator):
 
 snowflakes = sa.Table(
     "snowflakes",
-    METADATA,
+    __metadata,
 
     sa.Column("id", sa.BigInteger, primary_key=True),
     sa.Column("type", sa.String(32), index=True, nullable=False)
@@ -44,7 +44,7 @@ snowflakes = sa.Table(
 
 users = sa.Table(
     "users",
-    METADATA,
+    __metadata,
 
     sa.Column("id", sa.BigInteger, primary_key=True),
 
@@ -65,7 +65,7 @@ users = sa.Table(
 
 topics = sa.Table(
     "topics",
-    METADATA,
+    __metadata,
 
     sa.Column("id", sa.BigInteger, primary_key=True),
 
@@ -82,7 +82,7 @@ topics = sa.Table(
 
 comments = sa.Table(
     "comments",
-    METADATA,
+    __metadata,
 
     sa.Column("id", sa.BigInteger, primary_key=True),
 
@@ -103,7 +103,7 @@ comments = sa.Table(
 
 reactions = sa.Table(
     "reactions",
-    METADATA,
+    __metadata,
 
     sa.Column("user_id", sa.BigInteger, index=True, nullable=False),
     sa.Column("object_id", sa.BigInteger, index=True, nullable=False),
@@ -118,7 +118,7 @@ reactions = sa.Table(
 
 stories = sa.Table(
     "stories",
-    METADATA,
+    __metadata,
 
     sa.Column("id", sa.BigInteger, primary_key=True),
 

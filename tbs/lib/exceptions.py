@@ -11,9 +11,21 @@ class ValidationError(TheBestoryError, ValueError):
     pass
 
 
-class NotFoundError(TheBestoryError):
+class DatabaseError(TheBestoryError):
     pass
 
 
-class NotCreatedError(TheBestoryError):
+class NotFetchedError(DatabaseError):
+    pass
+
+
+class NotFoundError(DatabaseError):
+    pass
+
+
+class NotCreatedError(DatabaseError):
+    pass
+
+
+class NotUpdatedError(DatabaseError):
     pass
