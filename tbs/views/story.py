@@ -6,11 +6,11 @@ from tbs.views import user as user_view
 from tbs.views import topic as topic_view
 
 
-def render(story):
+def render(story, author, topic=None):
     return {
         "id": story["id"],
-        "author": render_author(story["author_id"], story.get("author")),
-        "topic": render_topic(story["topic"], story.get("topic")),
+        "author": render_author(story["author_id"], author),
+        "topic": render_topic(story["topic"], topic),
         "content": story["content"],
         "comments_count": story["comments_count"],
         "likes_count": story["likes_count"],

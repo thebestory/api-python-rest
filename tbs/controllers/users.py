@@ -40,8 +40,13 @@ async def show_user(request, id):
 
 @helpers.login_required
 async def update_user(request, id):
-    user = request.json
+    new_user = request.json
 
     async with db.pool.acquire() as conn:
-        user = await user_store.update(conn=conn, id=id, **user)
+        try:
+            user = await user_store.get(conn=conn, id=id)
+        except exceptions.NotFoundError:
+            return json(response_wrapper.error(4001), status=404)
+
+        user = await user_store.update(conn=conn, id=id, **new_user)
         return json(response_wrapper.ok(user_view.render(user)))

@@ -111,8 +111,9 @@ async def update(conn: Connection, id: int, **kwargs):
 
     query, params = asyncpgsa.compile_query(query)
 
-    await conn.execute(query, *params)
-    return await get(conn=conn, id=id)
+    async with conn.transaction():
+        await conn.execute(query, *params)
+        return await get(conn=conn, id=id)
 
 
 async def increment_stories_counter(conn: Connection, id: int):
@@ -125,8 +126,9 @@ async def increment_stories_counter(conn: Connection, id: int):
         )
     )
 
-    await conn.execute(query, *params)
-    return await get(conn=conn, id=id)
+    async with conn.transaction():
+        await conn.execute(query, *params)
+        return await get(conn=conn, id=id)
 
 
 async def decrement_stories_counter(conn: Connection, id: int):
@@ -139,5 +141,6 @@ async def decrement_stories_counter(conn: Connection, id: int):
         )
     )
 
-    await conn.execute(query, *params)
-    return await get(conn=conn, id=id)
+    async with conn.transaction():
+        await conn.execute(query, *params)
+        return await get(conn=conn, id=id)
