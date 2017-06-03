@@ -7,6 +7,7 @@ from sanic.response import json
 from tbs import db
 from tbs.lib import (
     exceptions,
+    helpers,
     password,
     response_wrapper,
     session
@@ -15,6 +16,7 @@ from tbs.lib.stores import user as user_store
 from tbs.views import session as session_view
 
 
+@helpers.login_required
 async def list_sessions(request):
     return json(response_wrapper.error(2003), status=403)
 
@@ -37,10 +39,12 @@ async def create_session(request):
             return json(response_wrapper.error(2004), status=400)
 
 
+@helpers.login_required
 async def show_session(request, id):
     return json(response_wrapper.error(2003), status=403)
 
 
+@helpers.login_required
 async def delete_session(request, id=None):
     if id is not None:
         return json(response_wrapper.error(2003), status=403)

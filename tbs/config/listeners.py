@@ -26,3 +26,11 @@ before_stop = []
 after_stop = [
     db.after_stop_listener
 ]
+
+# Alternate way to access listeners lists
+all = {
+    "before_start": before_start,
+    "after_start": after_start,
+    "before_stop": before_stop,
+    "after_stop": after_stop
+}

@@ -72,3 +72,19 @@ async def revoke(token: str):
     # TODO: Remove session from the DB.
 
     return True
+
+
+async def middleware(request):
+    """
+    Decodes a session from the request.
+    """
+    request["session"] = None
+    authorization = request.headers.get('Authorization', None)
+
+    if authorization is None:
+        return
+
+    token = authorization.split()[-1]
+
+    if validate(token):
+        request["session"] = decode(token)

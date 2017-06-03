@@ -7,6 +7,7 @@ from sanic.response import json
 from tbs import db
 from tbs.lib import (
     exceptions,
+    helpers,
     password,
     response_wrapper
 )
@@ -37,6 +38,7 @@ async def show_user(request, id):
         return json(response_wrapper.error(4001), status=404)
 
 
+@helpers.login_required
 async def update_user(request, id):
     user = request.json
 
