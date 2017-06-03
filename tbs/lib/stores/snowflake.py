@@ -6,9 +6,9 @@ import asyncpgsa
 from asyncpg.connection import Connection
 from asyncpg.protocol import Record
 
-from tbs import snowflake_generator
 from tbs.lib import exceptions
 from tbs.lib import schema
+from tbs.lib.snowflake import next_snowflake
 
 
 SNOWFLAKE_TYPE = "id"
@@ -36,7 +36,7 @@ async def create(conn: Connection, type: str) -> Record:
     Create a new Snowflake ID.
     """
 
-    id = snowflake_generator.generate()
+    id = next_snowflake()
     if not isinstance(id, int):
         raise ValueError
 

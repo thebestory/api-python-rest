@@ -4,6 +4,7 @@ The Bestory Project
 
 import logging
 import time
+from typing import Iterator
 
 from tbs.config import snowflake as config
 
@@ -21,6 +22,18 @@ machine_id_shift = sequence_number_bits
 
 machine_id_mask = -1 ^ (-1 << machine_id_bits) << machine_id_shift
 sequence_number_mask = -1 ^ (-1 << sequence_number_bits)
+
+__default_generator: Iterator[int]
+
+
+def generate() -> int:
+    """
+    Generate next Snowflake ID.
+    """
+    return next(__default_generator)
+
+
+next_snowflake = generate
 
 
 def timestamp_of_snowflake(snowflake: int) -> int:
@@ -96,3 +109,6 @@ def generator(machine_id: int=config.MACHINE_ID,
             (machine_id << machine_id_shift) |
             sequence_number
         )
+
+
+__default_generator = generator()

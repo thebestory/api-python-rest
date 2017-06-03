@@ -2,17 +2,13 @@
 The Bestory Project
 """
 
-from tbs import (
-    db,
-    snowflake_generator
-)
+from tbs import db
 
 
 # List of listeners, that will be iterated, and each listener will be
 # invoked before server start.
 before_start = [
-    db.before_start_listener,
-    snowflake_generator.before_start_listener
+    db.before_start_listener
 ]
 
 # List of listeners, that will be iterated, and each listener will be
