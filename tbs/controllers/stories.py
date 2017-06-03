@@ -114,7 +114,7 @@ async def update_story(request, id):
             except exceptions.NotFoundError:
                 return json(response_wrapper.error(4002), status=500)
 
-        story = await story_store.update(conn=conn, id=id, **story)
+        story = await story_store.update(conn=conn, id=id, **new_story)
 
         return json(response_wrapper.ok(story_view.render(
             story, author, topic
