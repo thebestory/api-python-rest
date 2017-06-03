@@ -99,8 +99,7 @@ async def create(conn: Connection,
 
     async with conn.transaction():
         snowflake = await snowflake_store.create(
-            conn=conn,
-            type=SNOWFLAKE_TYPE
+            conn=conn, type=SNOWFLAKE_TYPE
         )
 
         query, params = asyncpgsa.compile_query(

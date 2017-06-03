@@ -91,8 +91,7 @@ async def create(conn: Connection,
 
     async with conn.transaction():
         snowflake = await snowflake_store.create(
-            conn=conn,
-            type=SNOWFLAKE_TYPE
+            conn=conn, type=SNOWFLAKE_TYPE
         )
 
         query, params = asyncpgsa.compile_query(
@@ -278,5 +277,9 @@ async def decrement_stories_counter(conn: Connection, id: int):
         )
     )
 
-    await conn.execute(query, *params)
+    try:
+        await conn.execute(query, *params)
+    except PostgresError:
+        raise exceptions.NotUpdatedError
+
     return True

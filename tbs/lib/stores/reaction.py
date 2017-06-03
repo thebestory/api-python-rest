@@ -212,9 +212,7 @@ async def create(conn: Connection,
 
     query, params = asyncpgsa.compile_query(
         schema.reactions.insert().values(
-            user_id=user_id,
-            object_id=object_id,
-            reaction_id=reaction_id
+            user_id=user_id, object_id=object_id, reaction_id=reaction_id
         ).returning(
             schema.reactions.c.user_id,
             schema.reactions.c.object_id,

@@ -167,12 +167,12 @@ async def __list_fetch(conn: Connection,
     _ = data.parse_stories(dataset, prefix="stories_")
 
     if preload_author:
-        for story, row in zip(_, dataset):
-            story["author"] = data.parse_user(row, prefix="users_")
+        for story, dataset in zip(_, dataset):
+            story["author"] = data.parse_user(dataset, prefix="users_")
 
     if preload_topic:
-        for story, row in zip(_, dataset):
-            story["topic"] = data.parse_topic(row, prefix="topics_")
+        for story, dataset in zip(_, dataset):
+            story["topic"] = data.parse_topic(dataset, prefix="topics_")
 
     return _
 
@@ -348,23 +348,52 @@ async def list_random(conn: Connection,
 list_hot = list_top
 
 
-async def get(conn: Connection, id: int) -> dict:
+async def get(conn: Connection,
+              id: int,
+              preload_author=True,
+              preload_topic=True) -> dict:
     """
     Get a single story.
     """
-    query, params = asyncpgsa.compile_query(
-        schema.stories.select().where(schema.stories.c.id == id)
-    )
+    __to_select = [schema.stories]
+    __from_select = schema.stories
+
+    if preload_author:
+        __to_select.append(schema.users)
+        __from_select = __from_select.join(
+            schema.users,
+            schema.users.c.id == schema.stories.c.author_id
+        )
+    if preload_topic:
+        __to_select.append(schema.topics)
+        __from_select = __from_select.join(
+            schema.topics,
+            schema.topics.c.id == schema.stories.c.topic_id
+        )
+
+    query = select(__to_select) \
+        .select_from(__from_select) \
+        .where(schema.stories.c.id == id) \
+        .apply_labels()
+
+    query, params = asyncpgsa.compile_query(query)
 
     try:
-        story = await conn.fetchrow(query, *params)
+        dataset = await conn.fetchrow(query, *params)
     except PostgresError:
         raise exceptions.NotFetchedError
 
-    if not story:
+    if not dataset:
         raise exceptions.NotFoundError
 
-    return data.parse_story(story)
+    story = data.parse_story(dataset, prefix="stories_")
+
+    if preload_author:
+        story["author"] = data.parse_user(dataset, prefix="users_")
+    if preload_topic:
+        story["topic"] = data.parse_topic(dataset, prefix="topics_")
+
+    return story
 
 
 async def create(conn: Connection,
@@ -389,8 +418,7 @@ async def create(conn: Connection,
 
     async with conn.transaction():
         snowflake = await snowflake_store.create(
-            conn=conn,
-            type=SNOWFLAKE_TYPE
+            conn=conn, type=SNOWFLAKE_TYPE
         )
 
         query, params = asyncpgsa.compile_query(
@@ -411,8 +439,7 @@ async def create(conn: Connection,
 
             if topic_id is not None:
                 await topic_store.increment_stories_counter(
-                    conn=conn,
-                    id=topic_id
+                    conn=conn, id=topic_id
                 )
 
             return await get(conn=conn, id=snowflake["id"])

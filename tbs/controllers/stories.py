@@ -46,7 +46,9 @@ async def create_story(request):
             is_removed=story.get("is_removed", False)
         )
 
-        return json(response_wrapper.ok(story_view.render(story, author, topic)))
+        return json(response_wrapper.ok(story_view.render(
+            story, story["author"], story["topic"]
+        )))
 
 
 async def show_story(request, id):
@@ -56,21 +58,8 @@ async def show_story(request, id):
         except exceptions.NotFoundError:
             return json(response_wrapper.error(4004), status=404)
 
-        try:
-            author = await user_store.get(conn, story["author_id"])
-        except exceptions.NotFoundError:
-            return json(response_wrapper.error(4001), status=500)
-
-        try:
-            topic = None
-
-            if story["topic_id"] is not None:
-                topic = await topic_store.get(conn, story["topic_id"])
-        except exceptions.NotFoundError:
-            return json(response_wrapper.error(4002), status=500)
-
         return json(response_wrapper.ok(story_view.render(
-            story, author, topic
+            story, story["author"], story["topic"]
         )))
 
 
@@ -80,44 +69,23 @@ async def update_story(request, id):
 
     async with db.pool.acquire() as conn:
         try:
-            story = await story_store.get(conn=conn, id=id)
+            await story_store.get(
+                conn=conn, id=id, preload_topic=False, preload_author=False
+            )
         except exceptions.NotFoundError:
             return json(response_wrapper.error(4004), status=404)
-
-        author = None
-
-        if new_story.get("author") is not None:
-            try:
-                author = await user_store.get(conn, new_story["author"]["id"])
-            except exceptions.NotFoundError:
-                return json(response_wrapper.error(4001), status=404)
-
-            new_story["author_id"] = author["id"]
-        else:
-            try:
-                author = await user_store.get(conn, story["author_id"])
-            except exceptions.NotFoundError:
-                return json(response_wrapper.error(4001), status=500)
-
-        topic = None
 
         if new_story.get("topic") is not None:
             try:
                 topic = await topic_store.get(conn, new_story["topic"]["id"])
+                new_story["topic_id"] = topic["id"]
             except exceptions.NotFoundError:
-                return json(response_wrapper.error(4002), status=404)
-
-            new_story["topic_id"] = topic["id"]
-        else:
-            try:
-                topic = await topic_store.get(conn, story["topic_id"])
-            except exceptions.NotFoundError:
-                return json(response_wrapper.error(4002), status=500)
+                return json(response_wrapper.error(4002), status=400)
 
         story = await story_store.update(conn=conn, id=id, **new_story)
 
         return json(response_wrapper.ok(story_view.render(
-            story, author, topic
+            story, story["author"], story["topic"]
         )))
 
 
