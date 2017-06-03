@@ -75,6 +75,18 @@ def __list_prepare(topics: List[int]=None,
 
     query = select(__to_select).limit(limit).apply_labels()
 
+    if preload_author:
+        query = query.join(
+            schema.users,
+            schema.users.c.id == schema.stories.c.author_id
+        )
+
+    if preload_topic:
+        query = query.join(
+            schema.topics,
+            schema.topics.c.id == schema.stories.c.topic_id
+        )
+
     if topics is None or len(topics) == 0:
         inverse_topics = True
     elif inverse_topics:
