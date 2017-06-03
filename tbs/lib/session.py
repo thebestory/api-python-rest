@@ -86,5 +86,5 @@ async def middleware(request):
 
     token = authorization.split()[-1]
 
-    if validate(token):
-        request["session"] = decode(token)
+    if await validate(token):
+        request["session"] = await decode(token)

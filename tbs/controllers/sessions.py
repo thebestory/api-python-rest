@@ -35,6 +35,8 @@ async def create_session(request):
                 return json(response_wrapper.ok(session_view.render(
                     await session.create(user)
                 )))
+            else:
+                return json(response_wrapper.error(2004), status=400)
         except exceptions.NotFoundError:
             return json(response_wrapper.error(2004), status=400)
 
