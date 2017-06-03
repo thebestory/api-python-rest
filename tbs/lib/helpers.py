@@ -12,6 +12,6 @@ def login_required(handler):
         if request["session"] is None:
             return json(response_wrapper.error(2002), status=401)
         else:
-            await handler(request, **kwargs)
+            return await handler(request, **kwargs)
 
     return wrapper
