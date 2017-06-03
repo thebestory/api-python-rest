@@ -15,7 +15,7 @@ users = [
     {'username': 'woofilee', 'email': 'woofilee@thebestory.com', 'password': 'thebestory'},
     {'username': 'alex', 'email': 'alex@thebestory.com', 'password': 'thebestory'},
     {'username': 'oktai', 'email': 'oktai@thebestory.com', 'password': 'thebestory'},
-    {'username': 'bytonishe', 'email': 'bytonishe@thebestory.com', 'password': 'thebestory'}
+    {'username': 'byton', 'email': 'byton@thebestory.com', 'password': 'thebestory'}
 ]
 
 topics = [
@@ -73,7 +73,7 @@ async def insert_users(conn: Connection):
             conn=conn,
             username=user['username'],
             email=user['email'],
-            password=password.hash(user['password'])
+            password_=user['password']
         )
 
 
