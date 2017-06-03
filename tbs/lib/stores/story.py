@@ -78,7 +78,7 @@ def __list_prepare(topics: List[int]=None,
         )
     if preload_topic:
         __to_select.append(schema.topics)
-        __from_select = __from_select.join(
+        __from_select = __from_select.outerjoin(
             schema.topics,
             schema.topics.c.id == schema.stories.c.topic_id
         )
@@ -164,17 +164,20 @@ async def __list_fetch(conn: Connection,
     except PostgresError:
         raise exceptions.NotFetchedError
 
-    _ = data.parse_stories(dataset, prefix="stories_")
+    stories = data.parse_stories(dataset, prefix="stories_")
 
     if preload_author:
-        for story, dataset in zip(_, dataset):
-            story["author"] = data.parse_user(dataset, prefix="users_")
+        for story, row in zip(stories, dataset):
+            story["author"] = data.parse_user(row, prefix="users_")
 
     if preload_topic:
-        for story, dataset in zip(_, dataset):
-            story["topic"] = data.parse_topic(dataset, prefix="topics_")
+        for story, row in zip(stories, dataset):
+            if story["topic_id"] is not None:
+                story["topic"] = data.parse_topic(row, prefix="topics_")
+            else:
+                story["topic"] = None
 
-    return _
+    return stories
 
 
 async def list_latest(conn: Connection,
@@ -366,7 +369,7 @@ async def get(conn: Connection,
         )
     if preload_topic:
         __to_select.append(schema.topics)
-        __from_select = __from_select.join(
+        __from_select = __from_select.outerjoin(
             schema.topics,
             schema.topics.c.id == schema.stories.c.topic_id
         )
@@ -391,7 +394,10 @@ async def get(conn: Connection,
     if preload_author:
         story["author"] = data.parse_user(dataset, prefix="users_")
     if preload_topic:
-        story["topic"] = data.parse_topic(dataset, prefix="topics_")
+        if story["topic_id"] is not None:
+            story["topic"] = data.parse_topic(dataset, prefix="topics_")
+        else:
+            story["topic"] = None
 
     return story
 
