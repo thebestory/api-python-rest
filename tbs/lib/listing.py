@@ -3,7 +3,7 @@ The Bestory Project
 """
 
 from enum import IntEnum
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 
 
 class Direction(IntEnum):
@@ -32,7 +32,7 @@ class Listing:
 
         self._default_limit = default_limit
 
-    def validate_limit(self, limit: Optional[int] = None) -> int:
+    def validate_limit(self, limit: Optional[Union[int, str]] = None) -> int:
         """
         Returns limit value, which comply with the min and max value
         requirements.
@@ -40,22 +40,28 @@ class Listing:
         if limit is None:
             return self._default_limit
 
+        if isinstance(limit, str):
+            limit = int(limit)
+
         return max(self._min_limit, min(self._max_limit, limit))
 
     @staticmethod
-    def validate_id(_id: int) -> Optional[int]:
+    def validate_id(id: Union[int, str]) -> Optional[int]:
         """
         Returns validated ID.
         """
-        if 0 <= _id:
-            return _id
+        if isinstance(id, str):
+            limit = int(id)
+
+        if 0 <= id:
+            return id
 
         return None
 
     def validate(self,
-                 before: Optional[int]=None,
-                 after: Optional[int]=None,
-                 limit: Optional[int]=None
+                 before: Optional[Union[int, str]]=None,
+                 after: Optional[Union[int, str]]=None,
+                 limit: Optional[Union[int, str]]=None
                  ) -> Tuple[Optional[int], int, Direction]:
         """
         Returns a ID of thing, from  which to search, and the correct

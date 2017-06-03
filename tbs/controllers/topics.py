@@ -8,12 +8,17 @@ from tbs import db
 from tbs.lib import (
     exceptions,
     helpers,
+    listing,
     response_wrapper
 )
 from tbs.lib.stores import topic as topic_store
 from tbs.lib.stores import story as story_store
 from tbs.views import topic as topic_view
 from tbs.views import story as story_view
+
+
+# 25 stories per page
+__listing = listing.Listing(1, 100, 25)
 
 
 async def list_topics(request):
@@ -71,6 +76,15 @@ async def delete_topic(request, id):
 
 
 async def list_topic_latest_stories(request, id):
+    try:
+        pivot, limit, direction = __listing.validate(
+            request.raw_args.get("before", None),
+            request.raw_args.get("after", None),
+            request.raw_args.get("limit", None)
+        )
+    except ValueError:
+        return json(response_wrapper.error(3001), status=400)
+
     async with db.pool.acquire() as conn:
         if id != 0:
             try:
@@ -79,11 +93,34 @@ async def list_topic_latest_stories(request, id):
                 return json(response_wrapper.error(4002), status=404)
 
         topics = [] if id == 0 else [id]
+        stories = None
 
-        stories = await story_store.list_latest(
-            conn=conn,
-            topics=topics
-        )
+        if pivot is not None:
+            try:
+                pivot = await story_store.get(conn, pivot)
+            except exceptions.NotFoundError:
+                return json(response_wrapper.error(4004), status=400)
+
+            if direction == listing.Direction.BEFORE:
+                stories = await story_store.list_latest(
+                    conn=conn,
+                    topics=topics,
+                    published_date_after=pivot["published_date"],
+                    limit=limit
+                )
+            else:
+                stories = await story_store.list_latest(
+                    conn=conn,
+                    topics=topics,
+                    published_date_before=pivot["published_date"],
+                    limit=limit
+                )
+        else:
+            stories = await story_store.list_latest(
+                conn=conn,
+                topics=topics,
+                limit=limit
+            )
 
         return json(response_wrapper.ok([
             story_view.render(story, story["author"], story["topic"])
@@ -91,6 +128,15 @@ async def list_topic_latest_stories(request, id):
         ]))
 
 async def list_topic_hot_stories(request, id):
+    try:
+        pivot, limit, direction = __listing.validate(
+            request.raw_args.get("before", None),
+            request.raw_args.get("after", None),
+            request.raw_args.get("limit", None)
+        )
+    except ValueError:
+        return json(response_wrapper.error(3001), status=400)
+
     async with db.pool.acquire() as conn:
         if id != 0:
             try:
@@ -99,11 +145,34 @@ async def list_topic_hot_stories(request, id):
                 return json(response_wrapper.error(4002), status=404)
 
         topics = [] if id == 0 else [id]
+        stories = None
 
-        stories = await story_store.list_hot(
-            conn=conn,
-            topics=topics
-        )
+        if pivot is not None:
+            try:
+                pivot = await story_store.get(conn, pivot)
+            except exceptions.NotFoundError:
+                return json(response_wrapper.error(4004), status=400)
+
+            if direction == listing.Direction.BEFORE:
+                stories = await story_store.list_hot(
+                    conn=conn,
+                    topics=topics,
+                    published_date_after=pivot["published_date"],
+                    limit=limit
+                )
+            else:
+                stories = await story_store.list_hot(
+                    conn=conn,
+                    topics=topics,
+                    published_date_before=pivot["published_date"],
+                    limit=limit
+                )
+        else:
+            stories = await story_store.list_hot(
+                conn=conn,
+                topics=topics,
+                limit=limit
+            )
 
         return json(response_wrapper.ok([
             story_view.render(story, story["author"], story["topic"])
@@ -112,6 +181,15 @@ async def list_topic_hot_stories(request, id):
 
 
 async def list_topic_top_stories(request, id):
+    try:
+        pivot, limit, direction = __listing.validate(
+            request.raw_args.get("before", None),
+            request.raw_args.get("after", None),
+            request.raw_args.get("limit", None)
+        )
+    except ValueError:
+        return json(response_wrapper.error(3001), status=400)
+
     async with db.pool.acquire() as conn:
         if id != 0:
             try:
@@ -120,11 +198,34 @@ async def list_topic_top_stories(request, id):
                 return json(response_wrapper.error(4002), status=404)
 
         topics = [] if id == 0 else [id]
+        stories = None
 
-        stories = await story_store.list_top(
-            conn=conn,
-            topics=topics
-        )
+        if pivot is not None:
+            try:
+                pivot = await story_store.get(conn, pivot)
+            except exceptions.NotFoundError:
+                return json(response_wrapper.error(4004), status=400)
+
+            if direction == listing.Direction.BEFORE:
+                stories = await story_store.list_top(
+                    conn=conn,
+                    topics=topics,
+                    published_date_after=pivot["published_date"],
+                    limit=limit
+                )
+            else:
+                stories = await story_store.list_top(
+                    conn=conn,
+                    topics=topics,
+                    published_date_before=pivot["published_date"],
+                    limit=limit
+                )
+        else:
+            stories = await story_store.list_top(
+                conn=conn,
+                topics=topics,
+                limit=limit
+            )
 
         return json(response_wrapper.ok([
             story_view.render(story, story["author"], story["topic"])
@@ -133,6 +234,15 @@ async def list_topic_top_stories(request, id):
 
 
 async def list_topic_random_stories(request, id):
+    try:
+        pivot, limit, direction = __listing.validate(
+            request.raw_args.get("before", None),
+            request.raw_args.get("after", None),
+            request.raw_args.get("limit", None)
+        )
+    except ValueError:
+        return json(response_wrapper.error(3001), status=400)
+
     async with db.pool.acquire() as conn:
         if id != 0:
             try:
@@ -144,7 +254,8 @@ async def list_topic_random_stories(request, id):
 
         stories = await story_store.list_random(
             conn=conn,
-            topics=topics
+            topics=topics,
+            limit=limit
         )
 
         return json(response_wrapper.ok([
