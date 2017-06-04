@@ -34,7 +34,7 @@ async def list(conn: Connection,
     if preload_user:
         __to_select.append(schema.users)
         __from_select = __from_select.join(
-            schema.users, schema.users.c.id == schema.stories.c.author_id)
+            schema.users, schema.users.c.id == schema.reactions.c.user_id)
 
     query = (select(__to_select)
              .select_from(__from_select)
@@ -125,8 +125,9 @@ async def delete(conn,
 
     query = (schema.reactions.update()
              .values(is_removed=True)
-             .where(user_id=user_id, object_id=object_id,
-                    reaction_id=reaction_id))
+             .where(schema.reactions.c.user_id == user_id)
+             .where(schema.reactions.c.object_id == object_id)
+             .where(schema.reactions.c.reaction_id == reaction_id))
 
     query, params = asyncpgsa.compile_query(query)
 

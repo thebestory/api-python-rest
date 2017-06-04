@@ -145,7 +145,7 @@ reactions = Table(
     sa.Column("object_id", sa.BigInteger, index=True, nullable=False),
     sa.Column("reaction_id", sa.BigInteger, index=True, nullable=False),
 
-    sa.Column("is_removed", sa.Boolean, nullable=False),
+    sa.Column("is_removed", sa.Boolean, default=False, nullable=False),
 
     sa.Column("submitted_date", DateTime,
               default=lambda: datetime.utcnow().replace(tzinfo=pendulum.UTC),
