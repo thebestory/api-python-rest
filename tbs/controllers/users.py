@@ -22,7 +22,7 @@ async def create_user(request):
             email=user["email"],
             password=user["password"])
 
-        return json(response_wrapper.ok(user_view.render(user)))
+        return json(response_wrapper.ok(user_view.render(user)), status=201)
 
 
 async def show_user(request, id):

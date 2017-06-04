@@ -4,7 +4,7 @@ The Bestory Project
 
 import typing
 
-from sanic.response import json
+from sanic.response import text, json
 
 from tbs import db
 from tbs.lib import exceptions
@@ -47,7 +47,7 @@ async def create_topic(request):
             description=topic["description"],
             icon=topic["icon"],
             is_active=topic.get("is_active", False))
-        return json(response_wrapper.ok(topic_view.render(topic)))
+        return json(response_wrapper.ok(topic_view.render(topic)), status=201)
 
 
 async def show_topic(request, id: int):
@@ -82,7 +82,7 @@ async def delete_topic(request, id: int):
             return json(response_wrapper.error(4002), status=404)
 
         topic = await topic_store.update(conn=conn, id=id, is_active=False)
-        return json(response_wrapper.ok(topic_view.render(topic)))
+        return text("", status=204)
 
 
 async def _list_topic_stories(request,

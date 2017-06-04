@@ -38,6 +38,7 @@ async def list(conn: Connection,
 
     query = (select(__to_select)
              .select_from(__from_select)
+             .order_by(schema.reactions.c.submitted_date.desc())
              .apply_labels())
 
     if limit is not None:
@@ -81,7 +82,7 @@ async def list(conn: Connection,
 
     if preload_user:
         for reaction, row in zip(reactions, rows):
-            reaction["author"] = schema.users.parse(row, prefix="users_")
+            reaction["user"] = schema.users.parse(row, prefix="users_")
 
     return reactions
 
@@ -110,3 +111,26 @@ async def create(conn: Connection,
         return schema.reactions.parse(await conn.fetchrow(query, *params))
     except PostgresError:
         raise exceptions.NotCreatedError
+
+
+async def delete(conn,
+                 user_id: int,
+                 object_id: int,
+                 reaction_id: int):
+    """Delete the reactions.
+
+    Note: if in the DB saved multiple reactions by given parameters
+    (that seems like a bug), all reactions will be marked as removed.
+    """
+
+    query = (schema.reactions.update()
+             .values(is_removed=True)
+             .where(user_id=user_id, object_id=object_id,
+                    reaction_id=reaction_id))
+
+    query, params = asyncpgsa.compile_query(query)
+
+    try:
+        await conn.execute(query, *params)
+    except PostgresError:
+        raise exceptions.NotUpdatedError

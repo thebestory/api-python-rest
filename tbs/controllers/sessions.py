@@ -2,7 +2,7 @@
 The Bestory Project
 """
 
-from sanic.response import json
+from sanic.response import text, json
 
 from tbs import db
 from tbs.lib import exceptions
@@ -29,7 +29,7 @@ async def create_session(request):
 
             if password.verify(credentials["password"], user["password"]):
                 return json(response_wrapper.ok(session_view.render(
-                    await session.create(user))))
+                    await session.create(user))), status=201)
             else:
                 return json(response_wrapper.error(2004), status=400)
         except exceptions.NotFoundError:
@@ -45,4 +45,5 @@ async def show_session(request, id):
 async def delete_session(request, id=None):
     if id is not None:
         return json(response_wrapper.error(2003), status=403)
-    return json(response_wrapper.ok(None), status=204)
+
+    return text("", status=204)
