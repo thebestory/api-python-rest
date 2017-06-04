@@ -3,13 +3,13 @@ The Bestory Project
 """
 
 import asyncpg
-from asyncpg.pool import Pool
+import asyncpg.pool
 
 from tbs.config import db as config
 from tbs.lib import seed
 
 
-pool: Pool
+pool: asyncpg.pool.Pool
 
 
 async def before_start_listener(app, loop):
@@ -25,15 +25,12 @@ async def before_start_listener(app, loop):
         max_size=config.POOL_MAX_SIZE,
         max_queries=config.MAX_QUERIES,
         max_inactive_connection_lifetime=config.MAX_INACTIVE_CONNECTION_LIFETIME,
-        loop=loop
-    )
+        loop=loop)
 
 
 async def after_start_listener(app, loop):
     if config.SEED:
-        async with pool.acquire() as conn:
-            async with conn.transaction():
-                await seed.insert(conn)
+        await seed.insert()
 
 
 async def after_stop_listener(app, loop):

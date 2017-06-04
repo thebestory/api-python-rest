@@ -5,11 +5,9 @@ The Bestory Project
 from sanic.response import json
 
 from tbs import db
-from tbs.lib import (
-    exceptions,
-    helpers,
-    response_wrapper
-)
+from tbs.lib import exceptions
+from tbs.lib import helpers
+from tbs.lib import response_wrapper
 from tbs.lib.stores import user as user_store
 from tbs.lib.stores import topic as topic_store
 from tbs.lib.stores import story as story_store
@@ -31,7 +29,6 @@ async def create_story(request):
 
         try:
             topic = None
-
             if story.get("topic", None) is not None:
                 topic = await topic_store.get(conn, story["topic"]["id"])
         except exceptions.NotFoundError:
@@ -43,12 +40,10 @@ async def create_story(request):
             content=story["content"],
             topic_id=topic["id"] if topic is not None else None,
             is_published=story.get("is_published", False),
-            is_removed=story.get("is_removed", False)
-        )
+            is_removed=story.get("is_removed", False))
 
         return json(response_wrapper.ok(story_view.render(
-            story, story["author"], story["topic"]
-        )))
+            story, story["author"], story["topic"])))
 
 
 async def show_story(request, id):
@@ -69,9 +64,8 @@ async def update_story(request, id):
 
     async with db.pool.acquire() as conn:
         try:
-            await story_store.get(
-                conn=conn, id=id, preload_topic=False, preload_author=False
-            )
+            _ = await story_store.get(conn=conn, id=id, preload_topic=False,
+                                      preload_author=False)
         except exceptions.NotFoundError:
             return json(response_wrapper.error(4004), status=404)
 
@@ -85,8 +79,7 @@ async def update_story(request, id):
         story = await story_store.update(conn=conn, id=id, **new_story)
 
         return json(response_wrapper.ok(story_view.render(
-            story, story["author"], story["topic"]
-        )))
+            story, story["author"], story["topic"])))
 
 
 @helpers.login_required

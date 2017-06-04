@@ -5,12 +5,9 @@ The Bestory Project
 from sanic.response import json
 
 from tbs import db
-from tbs.lib import (
-    exceptions,
-    helpers,
-    password,
-    response_wrapper
-)
+from tbs.lib import exceptions
+from tbs.lib import helpers
+from tbs.lib import response_wrapper
 from tbs.lib.stores import user as user_store
 from tbs.views import user as user_view
 
@@ -23,8 +20,7 @@ async def create_user(request):
             conn=conn,
             username=user["username"],
             email=user["email"],
-            password_=user["password"]
-        )
+            password=user["password"])
 
         return json(response_wrapper.ok(user_view.render(user)))
 
@@ -44,7 +40,7 @@ async def update_user(request, id):
 
     async with db.pool.acquire() as conn:
         try:
-            user = await user_store.get(conn=conn, id=id)
+            _ = await user_store.get(conn=conn, id=id)
         except exceptions.NotFoundError:
             return json(response_wrapper.error(4001), status=404)
 

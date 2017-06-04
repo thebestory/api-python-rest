@@ -8,16 +8,12 @@ from jose.exceptions import JWTError
 from tbs import db
 from tbs.config import jose as config
 from tbs.lib import exceptions
-from tbs.lib.stores import user as user_store
+from tbs.lib import stores
 
 
 async def create(user):
-    """
-    Create a new JWT for session of the user.
-    """
-
+    """Create a new JWT for session of the user."""
     # TODO: Save session to the DB.
-
     return {
         "user": user,
         "jwt": jwt.encode(
@@ -32,9 +28,7 @@ async def create(user):
 
 
 async def validate(token: str):
-    """
-    Validate JWT.
-    """
+    """Validate a JWT."""
     try:
         # TODO: Check session in the DB.
 
@@ -44,15 +38,13 @@ async def validate(token: str):
 
 
 async def decode(token: str):
-    """
-    Decode a JWT into session and fetch user from DB.
-    """
+    """Decode a JWT into session and fetch user from DB."""
     try:
         payload = jwt.decode(token, config.SECRET, config.ALGORITHM)
 
         async with db.pool.acquire() as conn:
             try:
-                user = await user_store.get(conn, payload["user"])
+                user = await stores.user.get(conn, payload["user"])
 
                 return {
                     "user": user,
@@ -65,19 +57,13 @@ async def decode(token: str):
 
 
 async def revoke(token: str):
-    """
-    Delete session of the user.
-    """
-
+    """Delete session of the user and invalidate a JWT."""
     # TODO: Remove session from the DB.
-
     return True
 
 
 async def middleware(request):
-    """
-    Decodes a session from the request.
-    """
+    """Decodes a session from the request."""
     request["session"] = None
     authorization = request.headers.get('Authorization', None)
 

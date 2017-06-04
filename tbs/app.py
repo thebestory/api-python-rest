@@ -5,11 +5,9 @@ The Bestory Project
 from sanic import Sanic
 from sanic.response import json
 
-from tbs.config import (
-    endpoints,
-    listeners,
-    middleware
-)
+from tbs.config import endpoints
+from tbs.config import listeners
+from tbs.config import middleware
 from tbs.lib import response_wrapper
 
 

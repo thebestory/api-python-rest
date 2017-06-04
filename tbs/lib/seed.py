@@ -4,10 +4,8 @@ The Bestory Project
 
 from asyncpg.connection import Connection
 
-from tbs.lib import password
-from tbs.lib.stores import user as user_store
-from tbs.lib.stores import topic as topic_store
-from tbs.lib.stores import story as story_store
+from tbs import db
+from tbs.lib import stores
 
 
 users = [
@@ -69,48 +67,42 @@ stories = [
 
 async def insert_users(conn: Connection):
     for user in users:
-        await user_store.create(
+        await stores.user.create(
             conn=conn,
             username=user['username'],
             email=user['email'],
-            password_=user['password']
-        )
-
+            password=user['password'])
 
 async def insert_topics(conn: Connection):
     for topic in topics:
-        await topic_store.create(
+        await stores.topic.create(
             conn=conn,
             title=topic['title'],
             slug=topic['slug'],
             description=topic['description'],
             icon=topic['icon'],
-            is_active=True
-        )
-
+            is_active=True)
 
 async def insert_stories(conn: Connection):
     for story in stories:
-        author = await user_store.get_by_username(
-            conn=conn,
-            username=story['author']
-        )
-        topic = await topic_store.get_by_slug(conn=conn, slug=story['topic'])
+        author = await stores.user.get_by_username(conn=conn,
+                                                   username=story['author'])
+        topic = await stores.topic.get_by_slug(conn=conn, slug=story['topic'])
 
-        await story_store.create(
+        await stores.story.create(
             conn=conn,
             author_id=author['id'],
             topic_id=topic['id'],
             content=story['content'],
-            is_published=True
-        )
+            is_published=True)
+
+async def insert():
+    async with db.pool.acquire() as conn:
+        async with conn.transaction():
+            await insert_users(conn)
+            await insert_topics(conn)
+            await insert_stories(conn)
 
 
-async def insert(conn: Connection):
-    await insert_users(conn)
-    await insert_topics(conn)
-    await insert_stories(conn)
-
-
-async def clear(conn: Connection):
+async def clear():
     pass

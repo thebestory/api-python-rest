@@ -2,24 +2,20 @@
 The Bestory Project
 """
 
-from enum import IntEnum
+import enum
 from typing import Optional, Tuple, Union
 
 
-class Direction(IntEnum):
+class Direction(enum.IntEnum):
     BEFORE = -1
     AROUND = 0
     AFTER = 1
 
 
 class Listing:
-    """
-    Listing class.
+    """Listing class.
 
-    Methods for working with listings.
-    IDs of things can be provided in 10 base as int (0-9 digits,
-    internal ids) or in 36 base as str (0-9 digits + a-z characters,
-    public ids).
+    Methods for working with listings queries.
     """
 
     def __init__(self, min_limit: int, max_limit: int, default_limit: int):
@@ -32,9 +28,10 @@ class Listing:
 
         self._default_limit = default_limit
 
-    def validate_limit(self, limit: Optional[Union[int, str]] = None) -> int:
-        """
-        Returns limit value, which comply with the min and max value
+    def validate_limit(self, limit: Optional[Union[int, str]]=None) -> int:
+        """Returns validated limit value.
+
+        Limit value should comply with the min and max value
         requirements.
         """
         if limit is None:
@@ -47,15 +44,12 @@ class Listing:
 
     @staticmethod
     def validate_id(id: Union[int, str]) -> Optional[int]:
-        """
-        Returns validated ID.
-        """
+        """Returns validated ID."""
         if isinstance(id, str):
             id = int(id)
 
         if 0 <= id:
             return id
-
         return None
 
     def validate(self,
@@ -63,7 +57,8 @@ class Listing:
                  after: Optional[Union[int, str]]=None,
                  limit: Optional[Union[int, str]]=None
                  ) -> Tuple[Optional[int], int, Direction]:
-        """
+        """Validate a listing query values.
+
         Returns a ID of thing, from  which to search, and the correct
         value of limit. If neither of `before` and `after` is
         specified, returns None as ID of thing and `after`, that means
@@ -77,7 +72,6 @@ class Listing:
 
         if before is not None:
             return self.validate_id(before), limit, Direction.BEFORE
-
         if after is not None:
             return self.validate_id(after), limit, Direction.AFTER
 

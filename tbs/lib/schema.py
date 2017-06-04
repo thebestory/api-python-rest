@@ -2,8 +2,10 @@
 The Bestory Project
 """
 
+import typing
 from datetime import datetime
 
+import asyncpg
 import pendulum
 import sqlalchemy as sa
 
@@ -11,8 +13,23 @@ import sqlalchemy as sa
 __metadata = sa.MetaData()
 
 
+class Table(sa.Table):
+    """SQLAlchemy table with a parsing support."""
+
+    def parse(self, record: asyncpg.Record, prefix=""):
+        """Parse an :class:`asyncpg.Record` object into dict."""
+        parsed = {column.key: None for column in self.columns}
+
+        for key in parsed:
+            if prefix + key in record:
+                parsed[key] = record[prefix + key]
+
+        return parsed
+
+
 class DateTime(sa.TypeDecorator):
-    """
+    """DateTime with a default UTC timezone.
+
     Implements a type with explicit requirement to set timezones.
     Before saving to a database, converts it to the UTC timezone.
     After retrieving from a database, has the UTC timezone.
@@ -34,15 +51,14 @@ class DateTime(sa.TypeDecorator):
         return value
 
 
-snowflakes = sa.Table(
+snowflakes = Table(
     "snowflakes",
     __metadata,
 
     sa.Column("id", sa.BigInteger, primary_key=True),
-    sa.Column("type", sa.String(32), index=True, nullable=False)
-)
+    sa.Column("type", sa.String(32), index=True, nullable=False))
 
-users = sa.Table(
+users = Table(
     "users",
     __metadata,
 
@@ -60,10 +76,9 @@ users = sa.Table(
 
     sa.Column("registered_date", DateTime,
               default=lambda: datetime.utcnow().replace(tzinfo=pendulum.UTC),
-              nullable=False)
-)
+              nullable=False))
 
-topics = sa.Table(
+topics = Table(
     "topics",
     __metadata,
 
@@ -77,10 +92,9 @@ topics = sa.Table(
 
     sa.Column("stories_count", sa.Integer, default=0, nullable=False),
 
-    sa.Column("is_active", sa.Boolean, default=False, nullable=False)
-)
+    sa.Column("is_active", sa.Boolean, default=False, nullable=False))
 
-comments = sa.Table(
+comments = Table(
     "comments",
     __metadata,
 
@@ -98,10 +112,9 @@ comments = sa.Table(
     sa.Column("submitted_date", DateTime,
               default=lambda: datetime.utcnow().replace(tzinfo=pendulum.UTC),
               nullable=False),
-    sa.Column("edited_date", DateTime, nullable=True)
-)
+    sa.Column("edited_date", DateTime, nullable=True))
 
-reactions = sa.Table(
+reactions = Table(
     "reactions",
     __metadata,
 
@@ -113,10 +126,9 @@ reactions = sa.Table(
 
     sa.Column("submitted_date", DateTime,
               default=lambda: datetime.utcnow().replace(tzinfo=pendulum.UTC),
-              nullable=False)
-)
+              nullable=False))
 
-stories = sa.Table(
+stories = Table(
     "stories",
     __metadata,
 
@@ -137,5 +149,4 @@ stories = sa.Table(
               default=lambda: datetime.utcnow().replace(tzinfo=pendulum.UTC),
               nullable=False),
     sa.Column("published_date", DateTime, nullable=True),
-    sa.Column("edited_date", DateTime, nullable=True)
-)
+    sa.Column("edited_date", DateTime, nullable=True))

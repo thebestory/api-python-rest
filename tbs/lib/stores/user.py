@@ -6,102 +6,65 @@ import asyncpgsa
 from asyncpg.connection import Connection
 from asyncpg.exceptions import PostgresError
 
-from tbs.lib import (
-    data,
-    exceptions,
-    password,
-    schema
-)
+from tbs.lib import exceptions
+from tbs.lib import password as passutils
+from tbs.lib import schema
+from tbs.lib import validators
 from tbs.lib.stores import snowflake as snowflake_store
-from tbs.lib.validators import user as validators
 
 
 SNOWFLAKE_TYPE = "user"
 
 
-async def get(conn: Connection, id: int) -> dict:
-    """
-    Get a single user.
-    """
-    query, params = asyncpgsa.compile_query(
-        schema.users.select().where(schema.users.c.id == id)
-    )
+async def __get_execute(conn: Connection, query) -> dict:
+    """Query executor."""
+    query, params = asyncpgsa.compile_query(query)
 
     try:
-        user = await conn.fetchrow(query, *params)
+        row = await conn.fetchrow(query, *params)
     except PostgresError:
         raise exceptions.NotFetchedError
 
-    if not user:
+    if not row:
         raise exceptions.NotFoundError
+    return schema.users.parse(row)
 
-    return data.parse_user(user)
-
+async def get(conn: Connection, id: int) -> dict:
+    """Get a single user."""
+    return await __get_execute(
+        conn, schema.users.select().where(schema.users.c.id == id))
 
 async def get_by_username(conn: Connection, username: str) -> dict:
-    """
-    Get a single user by it's username.
-    """
-    query, params = asyncpgsa.compile_query(
-        schema.users.select().where(schema.users.c.username == username)
-    )
-
-    try:
-        user = await conn.fetchrow(query, *params)
-    except PostgresError:
-        raise exceptions.NotFetchedError
-
-    if not user:
-        raise exceptions.NotFoundError
-
-    return data.parse_user(user)
-
+    """Get a single user by it's username."""
+    return await __get_execute(
+        conn, schema.users.select().where(schema.users.c.username == username))
 
 async def get_by_email(conn: Connection, email: str) -> dict:
-    """
-    Get a single user by it's email.
-    """
-    query, params = asyncpgsa.compile_query(
-        schema.users.select().where(schema.users.c.email == email)
-    )
-
-    try:
-        user = await conn.fetchrow(query, *params)
-    except PostgresError:
-        raise exceptions.NotFetchedError
-
-    if not user:
-        raise exceptions.NotFoundError
-
-    return data.parse_user(user)
+    """Get a single user by it's email."""
+    return await __get_execute(
+        conn, schema.users.select().where(schema.users.c.email == email))
 
 
 async def create(conn: Connection,
                  username: str,
                  email: str,
-                 password_: str) -> dict:
-    """
-    Create a new user.
-    """
-    validators.validate_username(username)
-    validators.validate_email(email)
-    validators.validate_password(password_)
+                 password: str) -> dict:
+    """Create a new user."""
+    validators.user.validate_username(username)
+    validators.user.validate_email(email)
+    validators.user.validate_password(password)
 
-    password_ = password.hash(password_)
+    password = passutils.hash(password)
 
     async with conn.transaction():
-        snowflake = await snowflake_store.create(
-            conn=conn, type=SNOWFLAKE_TYPE
-        )
+        snowflake = await snowflake_store.create(conn=conn,
+                                                 type=SNOWFLAKE_TYPE)
 
-        query, params = asyncpgsa.compile_query(
-            schema.users.insert().values(
-                id=snowflake["id"],
-                username=username,
-                email=email,
-                password=password_
-            )
-        )
+        query, params = asyncpgsa.compile_query(schema.users.insert().values(
+            id=snowflake["id"],
+            username=username,
+            email=email,
+            password=password))
 
         try:
             await conn.execute(query, *params)
@@ -111,22 +74,20 @@ async def create(conn: Connection,
 
 
 async def update(conn: Connection, id: int, **kwargs) -> dict:
-    """
-    Update the user.
-    """
+    """Update the user."""
     query = schema.users.update().where(schema.users.c.id == id)
 
     if "username" in kwargs:
-        validators.validate_username(kwargs["username"])
+        validators.user.validate_username(kwargs["username"])
         query = query.values(username=kwargs["username"])
 
     if "email" in kwargs:
-        validators.validate_email(kwargs["email"])
+        validators.user.validate_email(kwargs["email"])
         query = query.values(email=kwargs["email"])
 
     if "password" in kwargs:
-        validators.validate_password(kwargs["password"])
-        query = query.values(password=password.hash(kwargs["password"]))
+        validators.user.validate_password(kwargs["password"])
+        query = query.values(password=passutils.hash(kwargs["password"]))
 
     query, params = asyncpgsa.compile_query(query)
 
@@ -141,145 +102,53 @@ async def update(conn: Connection, id: int, **kwargs) -> dict:
         raise exceptions.NotUpdatedError
 
 
-async def increment_comments_counter(conn: Connection, id: int):
-    """
-    Increment user's comments counter.
-    """
-    query, params = asyncpgsa.compile_query(
-        schema.users.update().where(schema.users.c.id == id).values(
-            comments_count=schema.users.c.comments_count + 1
-        )
-    )
+async def __update_counter(conn: Connection, id: int, query):
+    """Change counter of the user."""
+    q, p = asyncpgsa.compile_query(query.where(schema.users.c.id == id))
 
     try:
-        await conn.execute(query, *params)
+        await conn.execute(q, *p)
     except PostgresError:
         raise exceptions.NotUpdatedError
 
     return True
-
-
-async def increment_comment_reactions_counter(conn: Connection, id: int):
-    """
-    Increment user's comment reactions counter.
-    """
-    query, params = asyncpgsa.compile_query(
-        schema.users.update().where(schema.users.c.id == id).values(
-            comment_reactions_count=schema.users.c.comment_reactions_count + 1
-        )
-    )
-
-    try:
-        await conn.execute(query, *params)
-    except PostgresError:
-        raise exceptions.NotUpdatedError
-
-    return True
-
-
-async def increment_story_reactions_counter(conn: Connection, id: int):
-    """
-    Increment user's story reactions counter.
-    """
-    query, params = asyncpgsa.compile_query(
-        schema.users.update().where(schema.users.c.id == id).values(
-            story_reactions_count=schema.users.c.story_reactions_count + 1
-        )
-    )
-
-    try:
-        await conn.execute(query, *params)
-    except PostgresError:
-        raise exceptions.NotUpdatedError
-
-    return True
-
 
 async def increment_stories_counter(conn: Connection, id: int):
-    """
-    Increment user's stories counter.
-    """
-    query, params = asyncpgsa.compile_query(
-        schema.users.update().where(schema.users.c.id == id).values(
-            stories_count=schema.users.c.stories_count + 1
-        )
-    )
+    """Increment stories counter of the user."""
+    return __update_counter(conn, id, schema.users.update().values(
+        stories_count=schema.users.c.stories_count + 1))
 
-    try:
-        await conn.execute(query, *params)
-    except PostgresError:
-        raise exceptions.NotUpdatedError
+async def increment_comments_counter(conn: Connection, id: int):
+    """Increment comments counter of the user."""
+    return __update_counter(conn, id, schema.users.update().values(
+        comments_count=schema.users.c.comments_count + 1))
 
-    return True
+async def increment_story_reactions_counter(conn: Connection, id: int):
+    """Increment story reactions counter of the user."""
+    return __update_counter(conn, id, schema.users.update().values(
+        story_reactions_count=schema.users.c.story_reactions_count + 1))
 
-
-async def decrement_comments_counter(conn: Connection, id: int):
-    """
-    Decrement user's comments counter.
-    """
-    query, params = asyncpgsa.compile_query(
-        schema.users.update().where(schema.users.c.id == id).values(
-            comments_count=schema.users.c.comments_count - 1
-        )
-    )
-
-    try:
-        await conn.execute(query, *params)
-    except PostgresError:
-        raise exceptions.NotUpdatedError
-
-    return True
-
-
-async def decrement_comment_reactions_counter(conn: Connection, id: int):
-    """
-    Decrement user's comment reactions counter.
-    """
-    query, params = asyncpgsa.compile_query(
-        schema.users.update().where(schema.users.c.id == id).values(
-            comment_reactions_count=schema.users.c.comment_reactions_count - 1
-        )
-    )
-
-    try:
-        await conn.execute(query, *params)
-    except PostgresError:
-        raise exceptions.NotUpdatedError
-
-    return True
-
-
-async def decrement_story_reactions_counter(conn: Connection, id: int):
-    """
-    Decrement user's story reactions counter.
-    """
-    query, params = asyncpgsa.compile_query(
-        schema.users.update().where(schema.users.c.id == id).values(
-            story_reactions_count=schema.users.c.story_reactions_count - 1
-        )
-    )
-
-    try:
-        await conn.execute(query, *params)
-    except PostgresError:
-        raise exceptions.NotUpdatedError
-
-    return True
-
+async def increment_comment_reactions_counter(conn: Connection, id: int):
+    """Increment comment reactions counter of the user."""
+    return __update_counter(conn, id, schema.users.update().values(
+        comment_reactions_count=schema.users.c.comment_reactions_count + 1))
 
 async def decrement_stories_counter(conn: Connection, id: int):
-    """
-    Decrement user's stories counter.
-    """
-    query, params = asyncpgsa.compile_query(
-        schema.users.update().where(schema.users.c.id == id).values(
-            stories_count=schema.users.c.stories_count - 1
-        )
-    )
+    """Decrement stories counter of the user."""
+    return __update_counter(conn, id, schema.users.update().values(
+        stories_count=schema.users.c.stories_count - 1))
 
-    try:
-        await conn.execute(query, *params)
-    except PostgresError:
-        raise exceptions.NotUpdatedError
+async def decrement_comments_counter(conn: Connection, id: int):
+    """Decrement comments counter of the user."""
+    return __update_counter(conn, id, schema.users.update().values(
+        comments_count=schema.users.c.comments_count - 1))
 
-    return True
+async def decrement_story_reactions_counter(conn: Connection, id: int):
+    """Decrement story reactions counter of the user."""
+    return __update_counter(conn, id, schema.users.update().values(
+        story_reactions_count=schema.users.c.story_reactions_count - 1))
+
+async def decrement_comment_reactions_counter(conn: Connection, id: int):
+    """Decrement comment reactions counter of the user."""
+    return __update_counter(conn, id, schema.users.update().values(
+        comment_reactions_count=schema.users.c.comment_reactions_count - 1))

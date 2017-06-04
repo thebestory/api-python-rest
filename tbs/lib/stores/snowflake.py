@@ -6,49 +6,39 @@ import asyncpgsa
 from asyncpg.connection import Connection
 from asyncpg.exceptions import PostgresError
 
-from tbs.lib import (
-    data,
-    exceptions,
-    schema,
-)
-from tbs.lib.validators import snowflake as validators
-from tbs.lib.snowflake import next_snowflake
+from tbs.lib import exceptions
+from tbs.lib import schema
+from tbs.lib import snowflake
+from tbs.lib import validators
 
 
 SNOWFLAKE_TYPE = "id"
 
 
 async def get(conn: Connection, id: int) -> dict:
-    """
-    Get a single Snowflake ID.
-    """
+    """Get a single Snowflake ID."""
     query, params = asyncpgsa.compile_query(
-        schema.snowflakes.select().where(schema.snowflakes.c.id == id)
-    )
+        schema.snowflakes.select().where(schema.snowflakes.c.id == id))
 
     try:
-        snowflake = await conn.fetchrow(query, *params)
+        row = await conn.fetchrow(query, *params)
     except PostgresError:
         raise exceptions.NotFetchedError
 
-    if not snowflake:
+    if not row:
         raise exceptions.NotFoundError
-
-    return data.parse_snowflake(snowflake)
+    return schema.snowflakes.parse(row)
 
 
 async def create(conn: Connection, type: str) -> dict:
-    """
-    Create a new Snowflake ID.
-    """
-    id = next_snowflake()
+    """Create a new Snowflake ID."""
+    id = snowflake.generate()
 
-    validators.validate_id(id)
-    validators.validate_type(type)
+    validators.snowflake.validate_id(id)
+    validators.snowflake.validate_type(type)
 
     query, params = asyncpgsa.compile_query(
-        schema.snowflakes.insert().values(id=id, type=type)
-    )
+        schema.snowflakes.insert().values(id=id, type=type))
 
     try:
         async with conn.transaction():
