@@ -15,3 +15,10 @@ def login_required(handler):
             return await handler(request, **kwargs)
 
     return wrapper
+
+
+def is_authorized(request):
+    if request["session"] is None:
+        return False
+    else:
+        return True

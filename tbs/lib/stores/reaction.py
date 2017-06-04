@@ -21,7 +21,7 @@ async def list(conn: Connection,
                inverse_objects: bool=False,
                reactions: typing.List[int]=None,
                inverse_reactions: bool=False,
-               limit: int=25,
+               limit: typing.Optional[int]=None,
                include_removed: bool=False,
                only_removed: bool=False,
                preload_user: bool=True):
@@ -38,8 +38,10 @@ async def list(conn: Connection,
 
     query = (select(__to_select)
              .select_from(__from_select)
-             .limit(limit)
              .apply_labels())
+
+    if limit is not None:
+        query = query.limit(limit)
 
     if users is None or len(users) == 0:
         inverse_users = True

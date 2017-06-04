@@ -2,6 +2,7 @@
 The Bestory Project
 """
 
+from asyncpg.connection import Connection
 from sanic.response import json
 
 from tbs import db
@@ -10,8 +11,30 @@ from tbs.lib import helpers
 from tbs.lib import response_wrapper
 from tbs.lib.stores import user as user_store
 from tbs.lib.stores import topic as topic_store
+from tbs.lib.stores import reaction as reaction_store
 from tbs.lib.stores import story as story_store
 from tbs.views import story as story_view
+
+
+async def _get_user_like_status(request, conn: Connection, story_id: int):
+    like = None
+
+    if helpers.is_authorized(request):
+        like = False
+
+        try:
+            reactions = await reaction_store.list(
+                conn=conn,
+                users=[request["session"]["user"]],
+                objects=[story_id],
+                preload_user=False)
+
+            if len(reactions) > 0:
+                like = True
+        except exceptions.NotFetchedError:
+            pass
+
+    return like
 
 
 @helpers.login_required
@@ -42,20 +65,19 @@ async def create_story(request):
             is_published=story.get("is_published", False),
             is_removed=story.get("is_removed", False))
 
-        return json(response_wrapper.ok(story_view.render(
-            story, story["author"], story["topic"])))
+        like = _get_user_like_status(request, conn, story["id"])
+        return json(response_wrapper.ok(story_view.render(story, like)))
 
 
-async def show_story(request, id):
+async def show_story(request, id: int):
     async with db.pool.acquire() as conn:
         try:
             story = await story_store.get(conn=conn, id=id)
         except exceptions.NotFoundError:
             return json(response_wrapper.error(4004), status=404)
 
-        return json(response_wrapper.ok(story_view.render(
-            story, story["author"], story["topic"]
-        )))
+        like = _get_user_like_status(request, conn, story["id"])
+        return json(response_wrapper.ok(story_view.render(story, like)))
 
 
 @helpers.login_required
@@ -77,14 +99,22 @@ async def update_story(request, id):
                 return json(response_wrapper.error(4002), status=400)
 
         story = await story_store.update(conn=conn, id=id, **new_story)
-
-        return json(response_wrapper.ok(story_view.render(
-            story, story["author"], story["topic"])))
+        like = _get_user_like_status(request, conn, story["id"])
+        return json(response_wrapper.ok(story_view.render(story, like)))
 
 
 @helpers.login_required
 async def delete_story(request, id):
-    return json(response_wrapper.error(2003), status=403)
+    async with db.pool.acquire() as conn:
+        try:
+            _ = await story_store.get(conn=conn, id=id, preload_topic=False,
+                                      preload_author=False)
+        except exceptions.NotFoundError:
+            return json(response_wrapper.error(4004), status=404)
+
+        story = await story_store.update(conn=conn, id=id, is_removed=True)
+        like = _get_user_like_status(request, conn, story["id"])
+        return json(response_wrapper.ok(story_view.render(story, like)))
 
 
 async def list_story_reactions(request, story_id):
