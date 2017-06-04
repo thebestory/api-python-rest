@@ -25,7 +25,7 @@ async def _get_user_like_status(request, conn: Connection, story_id: int):
         try:
             reactions = await reaction_store.list(
                 conn=conn,
-                users=[request["session"]["user"]],
+                users=[request["session"]["user"]["id"]],
                 objects=[story_id],
                 preload_user=False)
 
@@ -65,7 +65,7 @@ async def create_story(request):
             is_published=story.get("is_published", False),
             is_removed=story.get("is_removed", False))
 
-        like = _get_user_like_status(request, conn, story["id"])
+        like = await _get_user_like_status(request, conn, story["id"])
         return json(response_wrapper.ok(story_view.render(story, like)))
 
 
@@ -76,7 +76,7 @@ async def show_story(request, id: int):
         except exceptions.NotFoundError:
             return json(response_wrapper.error(4004), status=404)
 
-        like = _get_user_like_status(request, conn, story["id"])
+        like = await _get_user_like_status(request, conn, story["id"])
         return json(response_wrapper.ok(story_view.render(story, like)))
 
 
@@ -99,7 +99,7 @@ async def update_story(request, id):
                 return json(response_wrapper.error(4002), status=400)
 
         story = await story_store.update(conn=conn, id=id, **new_story)
-        like = _get_user_like_status(request, conn, story["id"])
+        like = await _get_user_like_status(request, conn, story["id"])
         return json(response_wrapper.ok(story_view.render(story, like)))
 
 
@@ -113,7 +113,7 @@ async def delete_story(request, id):
             return json(response_wrapper.error(4004), status=404)
 
         story = await story_store.update(conn=conn, id=id, is_removed=True)
-        like = _get_user_like_status(request, conn, story["id"])
+        like = await _get_user_like_status(request, conn, story["id"])
         return json(response_wrapper.ok(story_view.render(story, like)))
 
 

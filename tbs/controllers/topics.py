@@ -134,7 +134,7 @@ async def _list_topic_stories(request,
             try:
                 reactions = await reaction_store.list(
                     conn=conn,
-                    users=[request["session"]["user"]],
+                    users=[request["session"]["user"]["id"]],
                     objects=stories_ids,
                     preload_user=False)
 
