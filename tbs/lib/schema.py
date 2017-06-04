@@ -94,6 +94,29 @@ topics = Table(
 
     sa.Column("is_active", sa.Boolean, default=False, nullable=False))
 
+stories = Table(
+    "stories",
+    __metadata,
+
+    sa.Column("id", sa.BigInteger, primary_key=True),
+
+    sa.Column("author_id", sa.BigInteger, index=True, nullable=False),
+    sa.Column("topic_id", sa.BigInteger, index=True, nullable=True),
+
+    sa.Column("content", sa.Text(8192), nullable=False),
+
+    sa.Column("comments_count", sa.Integer, default=0, nullable=False),
+    sa.Column("reactions_count", sa.Integer, default=0, nullable=False),
+
+    sa.Column("is_published", sa.Boolean, default=False, nullable=False),
+    sa.Column("is_removed", sa.Boolean, default=False, nullable=False),
+
+    sa.Column("submitted_date", DateTime,
+              default=lambda: datetime.utcnow().replace(tzinfo=pendulum.UTC),
+              nullable=False),
+    sa.Column("published_date", DateTime, nullable=True),
+    sa.Column("edited_date", DateTime, nullable=True))
+
 comments = Table(
     "comments",
     __metadata,
@@ -127,26 +150,3 @@ reactions = Table(
     sa.Column("submitted_date", DateTime,
               default=lambda: datetime.utcnow().replace(tzinfo=pendulum.UTC),
               nullable=False))
-
-stories = Table(
-    "stories",
-    __metadata,
-
-    sa.Column("id", sa.BigInteger, primary_key=True),
-
-    sa.Column("author_id", sa.BigInteger, index=True, nullable=False),
-    sa.Column("topic_id", sa.BigInteger, index=True, nullable=True),
-
-    sa.Column("content", sa.Text(8192), nullable=False),
-
-    sa.Column("comments_count", sa.Integer, default=0, nullable=False),
-    sa.Column("reactions_count", sa.Integer, default=0, nullable=False),
-
-    sa.Column("is_published", sa.Boolean, default=False, nullable=False),
-    sa.Column("is_removed", sa.Boolean, default=False, nullable=False),
-
-    sa.Column("submitted_date", DateTime,
-              default=lambda: datetime.utcnow().replace(tzinfo=pendulum.UTC),
-              nullable=False),
-    sa.Column("published_date", DateTime, nullable=True),
-    sa.Column("edited_date", DateTime, nullable=True))

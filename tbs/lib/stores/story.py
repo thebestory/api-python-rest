@@ -68,13 +68,11 @@ def __list_prepare(topics: typing.List[int]=None,
     if preload_author:
         __to_select.append(schema.users)
         __from_select = __from_select.join(
-            schema.users,
-            schema.users.c.id == schema.stories.c.author_id)
+            schema.users, schema.users.c.id == schema.stories.c.author_id)
     if preload_topic:
         __to_select.append(schema.topics)
         __from_select = __from_select.outerjoin(
-            schema.topics,
-            schema.topics.c.id == schema.stories.c.topic_id)
+            schema.topics, schema.topics.c.id == schema.stories.c.topic_id)
 
     query = (select(__to_select)
              .select_from(__from_select)
@@ -88,7 +86,7 @@ def __list_prepare(topics: typing.List[int]=None,
     else:
         query = query.where(schema.stories.c.topic_id.in_(topics))
 
-    if authors is None:
+    if authors is None or len(authors) == 0:
         inverse_authors = True
     elif inverse_authors:
         query = query.where(~schema.stories.c.author_id.in_(authors))
@@ -344,13 +342,11 @@ async def get(conn: Connection,
     if preload_author:
         __to_select.append(schema.users)
         __from_select = __from_select.join(
-            schema.users,
-            schema.users.c.id == schema.stories.c.author_id)
+            schema.users, schema.users.c.id == schema.stories.c.author_id)
     if preload_topic:
         __to_select.append(schema.topics)
         __from_select = __from_select.outerjoin(
-            schema.topics,
-            schema.topics.c.id == schema.stories.c.topic_id)
+            schema.topics, schema.topics.c.id == schema.stories.c.topic_id)
 
     query = (select(__to_select)
              .select_from(__from_select)

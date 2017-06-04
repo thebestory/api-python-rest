@@ -2,43 +2,43 @@
 The Bestory Project
 """
 
+from tbs.views import story as story_view
 from tbs.views import user as user_view
 
 
-def render(comment):
-    return {
+def render(comment, like=None):
+    _ = {
         "id": comment["id"],
-        "author": render_author(comment["author_id"], comment.get("author")),
-        "root": render_root(comment["root_id"]),
-        "parent": render_parent(comment["parent_id"]),
+        "author": _render_author(comment["author_id"], comment.get("author")),
+        "story": _render_story(comment["story_id"], comment.get("story")),
         "content": comment["content"],
-        "comments_count": comment["comments_count"],
-        "likes_count": comment["likes_count"],
-        "is_liked": comment.get("is_liked"),
-        "is_published": comment["is_published"],
+        "likes_count": comment["reactions_count"],
         "is_removed": comment["is_removed"],
         "submitted_date": comment["submitted_date"].isoformat(),
-        "published_date": render_date(comment["published_date"]),
-        "edited_date": render_date(comment["edited_date"])
+        "edited_date": _render_date(comment["edited_date"])
     }
 
+    if like is not None:
+        _["is_liked"] = like
 
-def render_author(author_id, author=None):
+    return _
+
+
+def _render_author(id, author=None):
     if author is None:
-        return {"id": author_id}
+        return {"id": id}
     else:
         return user_view.render(author)
 
 
-def render_root(root_id):
-    return {"id": root_id}
+def _render_story(id, story=None):
+    if story is None:
+        return {"id": id}
+    else:
+        return story_view.render(story)
 
 
-def render_parent(parent_id):
-    return {"id": parent_id}
-
-
-def render_date(date):
+def _render_date(date):
     if date is not None:
         return date.isoformat()
     else:
