@@ -115,40 +115,40 @@ async def __update_counter(conn: Connection, id: int, query):
 
 async def increment_stories_counter(conn: Connection, id: int):
     """Increment stories counter of the user."""
-    return __update_counter(conn, id, schema.users.update().values(
+    return await __update_counter(conn, id, schema.users.update().values(
         stories_count=schema.users.c.stories_count + 1))
 
 async def increment_comments_counter(conn: Connection, id: int):
     """Increment comments counter of the user."""
-    return __update_counter(conn, id, schema.users.update().values(
+    return await __update_counter(conn, id, schema.users.update().values(
         comments_count=schema.users.c.comments_count + 1))
 
 async def increment_story_reactions_counter(conn: Connection, id: int):
     """Increment story reactions counter of the user."""
-    return __update_counter(conn, id, schema.users.update().values(
+    return await __update_counter(conn, id, schema.users.update().values(
         story_reactions_count=schema.users.c.story_reactions_count + 1))
 
 async def increment_comment_reactions_counter(conn: Connection, id: int):
     """Increment comment reactions counter of the user."""
-    return __update_counter(conn, id, schema.users.update().values(
+    return await __update_counter(conn, id, schema.users.update().values(
         comment_reactions_count=schema.users.c.comment_reactions_count + 1))
 
 async def decrement_stories_counter(conn: Connection, id: int):
     """Decrement stories counter of the user."""
-    return __update_counter(conn, id, schema.users.update().values(
+    return await __update_counter(conn, id, schema.users.update().values(
         stories_count=schema.users.c.stories_count - 1))
 
 async def decrement_comments_counter(conn: Connection, id: int):
     """Decrement comments counter of the user."""
-    return __update_counter(conn, id, schema.users.update().values(
+    return await __update_counter(conn, id, schema.users.update().values(
         comments_count=schema.users.c.comments_count - 1))
 
 async def decrement_story_reactions_counter(conn: Connection, id: int):
     """Decrement story reactions counter of the user."""
-    return __update_counter(conn, id, schema.users.update().values(
+    return await __update_counter(conn, id, schema.users.update().values(
         story_reactions_count=schema.users.c.story_reactions_count - 1))
 
 async def decrement_comment_reactions_counter(conn: Connection, id: int):
     """Decrement comment reactions counter of the user."""
-    return __update_counter(conn, id, schema.users.update().values(
+    return await __update_counter(conn, id, schema.users.update().values(
         comment_reactions_count=schema.users.c.comment_reactions_count - 1))

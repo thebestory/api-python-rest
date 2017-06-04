@@ -143,10 +143,10 @@ async def __update_counter(conn: Connection, id: int, query):
 
 async def increment_stories_counter(conn: Connection, id: int):
     """Increment stories counter of the topic."""
-    return __update_counter(conn, id, schema.topics.update().values(
+    return await __update_counter(conn, id, schema.topics.update().values(
         stories_count=schema.topics.c.stories_count + 1))
 
 async def decrement_stories_counter(conn: Connection, id: int):
     """Decrement stories counter of the topic."""
-    return __update_counter(conn, id, schema.topics.update().values(
+    return await __update_counter(conn, id, schema.topics.update().values(
         stories_count=schema.topics.c.stories_count - 1))
