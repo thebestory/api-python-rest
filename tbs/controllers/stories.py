@@ -152,11 +152,17 @@ async def create_story_reaction(request, story_id):
         if len(reactions) > 0:
             reaction = reactions[0]
         else:
-            reaction = await reaction_store.create(
-                conn=conn,
-                user_id=request["session"]["user"]["id"],
-                object_id=story_id,
-                reaction_id=0)
+            async with conn.transaction():
+                reaction = await reaction_store.create(
+                    conn=conn,
+                    user_id=request["session"]["user"]["id"],
+                    object_id=story_id,
+                    reaction_id=0)
+
+                await user_store.increment_story_reactions_counter(
+                    conn=conn, id=request["session"]["user"]["id"])
+                await story_store.increment_reactions_counter(
+                    conn=conn, id=story_id)
 
         return json(response_wrapper.ok(reaction_view.render(reaction)),
                     status=201)
@@ -171,11 +177,17 @@ async def delete_story_reaction(request, story_id):
         except exceptions.NotFoundError:
             return json(response_wrapper.error(4004), status=404)
 
-        await reaction_store.delete(
-            conn=conn,
-            user_id=request["session"]["user"]["id"],
-            object_id=story_id,
-            reaction_id=0)
+        async with conn.transaction():
+            await reaction_store.delete(
+                conn=conn,
+                user_id=request["session"]["user"]["id"],
+                object_id=story_id,
+                reaction_id=0)
+
+            await user_store.decrement_story_reactions_counter(
+                conn=conn, id=request["session"]["user"]["id"])
+            await story_store.decrement_reactions_counter(
+                conn=conn, id=story_id)
 
         return text("", status=204)
 
