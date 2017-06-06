@@ -5,7 +5,9 @@ The Bestory Project
 from asyncpg.connection import Connection
 
 from tbs import db
-from tbs.lib import stores
+from tbs.lib.stores import story as story_store
+from tbs.lib.stores import topic as topic_store
+from tbs.lib.stores import user as user_store
 
 
 users = [
@@ -67,7 +69,7 @@ stories = [
 
 async def insert_users(conn: Connection):
     for user in users:
-        await stores.user.create(
+        await user_store.create(
             conn=conn,
             username=user['username'],
             email=user['email'],
@@ -75,7 +77,7 @@ async def insert_users(conn: Connection):
 
 async def insert_topics(conn: Connection):
     for topic in topics:
-        await stores.topic.create(
+        await topic_store.create(
             conn=conn,
             title=topic['title'],
             slug=topic['slug'],
@@ -85,11 +87,11 @@ async def insert_topics(conn: Connection):
 
 async def insert_stories(conn: Connection):
     for story in stories:
-        author = await stores.user.get_by_username(conn=conn,
-                                                   username=story['author'])
-        topic = await stores.topic.get_by_slug(conn=conn, slug=story['topic'])
+        author = await user_store.get_by_username(conn=conn,
+                                                  username=story['author'])
+        topic = await topic_store.get_by_slug(conn=conn, slug=story['topic'])
 
-        await stores.story.create(
+        await story_store.create(
             conn=conn,
             author_id=author['id'],
             topic_id=topic['id'],

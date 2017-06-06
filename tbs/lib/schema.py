@@ -2,7 +2,6 @@
 The Bestory Project
 """
 
-import typing
 from datetime import datetime
 
 import asyncpg
@@ -16,7 +15,7 @@ __metadata = sa.MetaData()
 class Table(sa.Table):
     """SQLAlchemy table with a parsing support."""
 
-    def parse(self, record: asyncpg.Record, prefix=""):
+    def parse(self, record: asyncpg.Record, prefix: str="") -> dict:
         """Parse an :class:`asyncpg.Record` object into dict."""
         parsed = {column.key: None for column in self.columns}
 

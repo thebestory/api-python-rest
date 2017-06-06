@@ -2,13 +2,14 @@
 The Bestory Project
 """
 
+import pendulum
 from jose import jwt
 from jose.exceptions import JWTError
 
 from tbs import db
 from tbs.config import jose as config
 from tbs.lib import exceptions
-from tbs.lib import stores
+from tbs.lib.stores import user as user_store
 
 
 async def create(user):
@@ -19,7 +20,8 @@ async def create(user):
         "jwt": jwt.encode(
             {
                 "user": user["id"],
-                "iss": config.ISSUER
+                "iss": config.ISSUER,
+                "iat": pendulum.now().int_timestamp
             },
             config.SECRET,
             config.ALGORITHM
@@ -44,7 +46,7 @@ async def decode(token: str):
 
         async with db.pool.acquire() as conn:
             try:
-                user = await stores.user.get(conn, payload["user"])
+                user = await user_store.get(conn, payload["user"])
 
                 return {
                     "user": user,
